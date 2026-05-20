@@ -1,936 +1,1339 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ROMAnalyzer</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3/drawing_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5/pose.js" crossorigin="anonymous"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Respiratory Monitor</title>
+<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Respiratory%20Monitor%22%2C%22short_name%22%3A%22RespMonitor%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%2307080f%22%2C%22theme_color%22%3A%22%2300e5cc%22%7D">
 <style>
-/* VARIABLES */
-:root {
-  --bg:#07080f; --bg1:#0c0f1a; --bg2:#111525; --bg3:#161c30;
-  --line:#1c2640; --line2:#243050;
-  --cyan:#00e5cc; --cyan2:#00b8a4; --cyan-d:rgba(0,229,204,.10);
-  --blue:#4db8ff; --blue-d:rgba(77,184,255,.10);
-  --red:#ff4466;  --red-d:rgba(255,68,102,.12);
-  --green:#39d353;
-  --orange:#ff8c42; --orange-d:rgba(255,140,66,.10);
-  --purple:#b985ff; --purple-d:rgba(185,133,255,.10);
-  --txt:#b8cfe8; --txt2:#6a88aa; --txt3:#384e68;
-  --mono:'JetBrains Mono',monospace;
-  --head:'Syne',sans-serif;
-  --nav-h:62px; --hd-h:50px;
-  --safe-b:env(safe-area-inset-bottom,0px);
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
+:root{
+  --bg:#ffffff;--bg1:#f5f7fa;--bg2:#eef0f5;--bg3:#e4e8f0;
+  --line:#d0d8e8;--line2:#b8c4d8;
+  --cyan:#00e5cc;--cyan2:#00b8a4;--cyan-d:rgba(0,229,204,.07);
+  --blue:#4db8ff;--blue-d:rgba(77,184,255,.08);
+  --red:#ff4466;--red-d:rgba(255,68,102,.09);
+  --yellow:#ffb400;--yellow-d:rgba(255,180,0,.08);
+  --txt:#0d1117;--txt2:#1a2535;--txt3:#2d3748;
+  --mono:'JetBrains Mono',monospace;--head:'Syne',sans-serif;
+  --hd:52px;--tb:56px;
 }
-*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
-html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--txt); font-family:var(--head); font-size:13px; }
-button,input,textarea { font-family:var(--head); outline:none; border:none; }
-button { cursor:pointer; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:#0d1117;font-family:var(--head);font-size:13px;overflow:hidden;-webkit-text-size-adjust:100%}
 
-/*PANTALLAS*/
-.screen { position:fixed; inset:0; display:flex; flex-direction:column; overflow:hidden; }
-.screen.off { display:none !important; }
+/* ── App shell ── */
+.app{display:flex;flex-direction:column;height:100%}
 
-/*ENCABEZADO COMPARTIDO*/
-.hd {
-  flex-shrink:0; height:var(--hd-h);
-  background:var(--bg1); border-bottom:1px solid var(--line);
-  display:flex; align-items:center; padding:0 14px; gap:10px; z-index:10;
-}
-.logo-mark {
-  width:30px; height:30px; flex-shrink:0; border-radius:8px;
-  background:linear-gradient(135deg,var(--cyan),var(--blue));
-  display:flex; align-items:center; justify-content:center;
-  box-shadow:0 0 14px rgba(0,229,204,.3);
-}
-.logo-mark svg { width:15px; height:15px; }
-.logo-name { font-size:14px; font-weight:700; letter-spacing:-.4px; color:#fff; }
-.logo-tag  { font-size:8px; color:var(--txt3); font-family:var(--mono); letter-spacing:1.5px; text-transform:uppercase; }
-.hd-right  { margin-left:auto; }
-.chip {
-  display:flex; align-items:center; gap:5px;
-  font-family:var(--mono); font-size:9px; padding:4px 9px;
-  border-radius:99px; border:1px solid var(--line2); color:var(--txt2); background:var(--bg2);
-}
-.dot { width:6px; height:6px; border-radius:50%; background:var(--txt3); flex-shrink:0; transition:all .3s; }
-.dot.on   { background:var(--green);  box-shadow:0 0 6px var(--green); }
-.dot.warn { background:var(--orange); box-shadow:0 0 6px var(--orange); }
+/* ── Header ── */
+header{height:var(--hd);background:var(--bg1);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;z-index:10}
+.logo-mark{width:28px;height:28px;background:var(--cyan);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-mark svg{width:14px;height:14px}
+.logo-name{font-size:13px;font-weight:700;letter-spacing:-.3px;color:#0d1117}
+.logo-tag{font-size:8px;color:#2d3748;font-family:var(--mono);letter-spacing:1.5px;text-transform:uppercase}
+.hd-right{margin-left:auto}
+.ble-btn{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;padding:6px 12px;border-radius:99px;border:1px solid var(--line2);color:#0d1117;background:var(--bg2);cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;outline:none}
+.ble-btn.connecting{border-color:rgba(255,180,0,.5);color:#5a3e00}
+.ble-btn.connected{border-color:rgba(0,229,204,.4);color:#0d1117;background:var(--cyan-d)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--txt3);transition:all .3s;flex-shrink:0}
+.dot.on{background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:blink 1.5s infinite}
+.dot.warn{background:var(--yellow);box-shadow:0 0 6px var(--yellow);animation:blink .8s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
-/*BOTONES NAVEGACIÓN*/
-.bot-nav {
-  position:fixed; bottom:0; left:0; right:0;
-  height:calc(var(--nav-h) + var(--safe-b));
-  background:var(--bg1); border-top:1px solid var(--line);
-  display:flex; z-index:100; padding-bottom:var(--safe-b);
-}
-.bot-nav.off { display:none !important; }
-.nb {
-  flex:1; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; gap:3px;
-  background:none; color:var(--txt3);
-  font-family:var(--mono); font-size:9px; letter-spacing:.8px; text-transform:uppercase;
-  padding:8px; transition:color .15s;
-}
-.nb svg { width:20px; height:20px; transition:all .15s; }
-.nb.on  { color:var(--cyan); }
-.nb.on svg { filter:drop-shadow(0 0 4px var(--cyan)); }
+/* ── Content area ── */
+.content{flex:1;overflow:hidden;position:relative}
+.tab-panel{position:absolute;inset:0;overflow-y:auto;display:none;flex-direction:column;-webkit-overflow-scrolling:touch}
+.tab-panel.active{display:flex}
 
-/*CÁMARA*/
-#sc-cam { background:#000; }
+/* ── Tab bar ── */
+.tabs{height:var(--tb);background:var(--bg1);border-top:1px solid var(--line);display:flex;flex-shrink:0}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:#2d3748;transition:color .15s;-webkit-tap-highlight-color:transparent;font-size:9px;font-family:var(--mono);letter-spacing:.5px;text-transform:uppercase;padding-bottom:2px}
+.tab svg{width:18px;height:18px;flex-shrink:0}
+.tab svg *{transition:stroke .15s}
+.tab.active{color:#0d5c6e}
+.tab.active svg *{stroke:#0d5c6e}
 
-.cam-wrap {
-  flex:1; position:relative; overflow:hidden;
-  display:flex; align-items:center; justify-content:center;
-  margin-bottom:var(--nav-h);
-}
+/* ── Sessions tab ── */
+.search-bar{padding:10px 12px;background:var(--bg1);border-bottom:1px solid var(--line);flex-shrink:0;position:sticky;top:0;z-index:5}
+.sw{position:relative}
+.sw input{width:100%;background:var(--bg3);border:1px solid var(--line2);border-radius:7px;color:#0d1117;font-family:var(--mono);font-size:11px;padding:7px 10px 7px 30px;outline:none;-webkit-appearance:none;transition:border-color .15s}
+.sw input:focus{border-color:var(--cyan)}
+.si-ico{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:#2d3748;pointer-events:none}
+.ses-count{padding:7px 14px;font-family:var(--mono);font-size:9px;color:#0d1117;letter-spacing:1px;border-bottom:1px solid var(--line);flex-shrink:0;display:flex;justify-content:space-between;align-items:center}
+.io-btns{display:flex;gap:6px}
+.io-btn{font-family:var(--mono);font-size:9px;color:#0d1117;background:var(--cyan-d);border:1px solid rgba(0,229,204,.15);border-radius:5px;padding:3px 8px;cursor:pointer;-webkit-tap-highlight-color:transparent;outline:none}
+.io-btn:active{background:rgba(0,229,204,.15)}
+.ses-list{padding:6px}
+.si-item{padding:11px 12px;border-radius:8px;cursor:pointer;border:1px solid transparent;margin-bottom:3px;-webkit-tap-highlight-color:transparent;transition:background .1s}
+.si-item:active{background:var(--bg3)}
+.si-top{display:flex;align-items:center;gap:5px;margin-bottom:3px;flex-wrap:wrap}
+.si-id{font-family:var(--mono);font-size:9px;color:#2d3748}
+.pill{display:inline-flex;align-items:center;gap:3px;font-family:var(--mono);font-size:8px;padding:1px 6px;border-radius:99px}
+.pill.live{color:#0d5c6e;background:var(--cyan-d);border:1px solid rgba(0,229,204,.2)}
+.pd{width:3px;height:3px;border-radius:50%;background:var(--cyan);animation:blink 1s infinite}
+.pill.apnea{color:#8b0000;background:var(--red-d);border:1px solid rgba(255,68,102,.2)}
+.si-name{font-size:13px;font-weight:600;color:#0d1117;margin-bottom:2px}
+.si-name.empty{color:#2d3748;font-weight:400;font-style:italic;font-size:12px}
+.si-meta{font-family:var(--mono);font-size:9px;color:#2d3748}
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#2d3748;padding:48px 20px;text-align:center}
+.empty-icon{font-size:44px;opacity:.15}
+.empty-title{font-size:13px;color:#0d1117;font-weight:500}
+.empty-sub{font-family:var(--mono);font-size:10px;line-height:1.6;color:#2d3748}
 
-/*Video: espejo*/
-#vid { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transform:scaleX(-1); }
-#cvs { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+/* ── Live tab ── */
+.live-panel{padding:12px;display:flex;flex-direction:column;gap:10px}
+.connect-card{background:var(--bg1);border:1px solid var(--line);border-radius:12px;padding:28px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.cc-icon{font-size:40px}
+.cc-title{font-size:16px;font-weight:700;color:#0d1117}
+.cc-sub{font-size:11px;font-family:var(--mono);color:#2d3748;line-height:1.6}
+.big-btn{padding:12px 28px;border-radius:8px;font-family:var(--head);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .2s;-webkit-tap-highlight-color:transparent;outline:none}
+.big-btn.cyan{background:var(--cyan);color:#0d1117}
+.big-btn.cyan:active{background:var(--cyan2)}
+.big-btn.red{background:var(--red-d);color:#8b0000;border:1px solid rgba(255,68,102,.3)}
+.big-btn.red:active{background:rgba(255,68,102,.15)}
 
-/*BOTONES FLOTANTES*/
-.fab-col { position:absolute; top:12px; right:12px; display:flex; flex-direction:column; gap:8px; z-index:20; }
-.fab {
-  width:48px; height:48px; border-radius:13px;
-  display:flex; align-items:center; justify-content:center;
-  font-size:20px; border:1px solid; transition:transform .1s;
-  box-shadow:0 4px 14px rgba(0,0,0,.5);
-}
-.fab:active { transform:scale(.92); }
-.fab-s { background:rgba(0,229,204,.15); border-color:rgba(0,229,204,.4); }
-.fab-r { background:rgba(255,68,102,.12); border-color:rgba(255,68,102,.3); }
-.fab-c { background:rgba(77,184,255,.15); border-color:rgba(77,184,255,.4); }
+.live-hd{background:var(--bg1);border:1px solid var(--line);border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px}
+.live-ses-tag{font-family:var(--mono);font-size:9px;color:#0d5c6e;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px}
+.live-name{font-size:13px;font-weight:600;color:#0d1117}
+.live-name.empty{color:#2d3748;font-weight:400;font-style:italic;font-size:12px}
 
-/*PANEL DE ANGULOS*/
-.ap {
-  position:absolute; bottom:0; left:0; right:0;
-  background:linear-gradient(to top,rgba(7,8,15,.97) 65%,transparent);
-  padding:30px 8px 10px;
-}
-.ap-row { display:flex; gap:5px; margin-bottom:5px; }
-.apc {
-  flex:1; background:rgba(12,15,26,.85); border:1px solid var(--line2);
-  border-radius:7px; padding:6px 7px;
-}
-.apc-lbl { font-family:var(--mono); font-size:7px; letter-spacing:.8px; text-transform:uppercase; color:var(--txt3); }
-.apc-val { font-family:var(--mono); font-size:19px; font-weight:500; line-height:1.1; color:#fff; }
-.apc-val span { font-size:8px; color:var(--txt3); }
-.apc-ex  { font-family:var(--mono); font-size:7px; color:var(--txt2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
-.apc-max { font-family:var(--mono); font-size:7px; color:var(--txt3); }
+/* ── Stats grid ── */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.stat{background:var(--bg1);border:1px solid var(--line);border-radius:8px;padding:9px 10px;display:flex;flex-direction:column;gap:2px}
+.sl{font-family:var(--mono);font-size:7.5px;letter-spacing:1px;text-transform:uppercase;color:#1a2535}
+.sv{font-family:var(--mono);font-size:22px;font-weight:500;line-height:1.1;color:#0d1117}
+.sv.c{color:#0d1117}.sv.b{color:#0d1117}.sv.r{color:var(--red)}
+.su{font-family:var(--mono);font-size:7.5px;color:#1a2535}
 
-/*Destello de guardado*/
-.flash { position:absolute; inset:0; background:rgba(0,229,204,.18); opacity:0; pointer-events:none; transition:opacity .3s; z-index:50; }
-.flash.show { opacity:1; }
+/* ── Section ── */
+.section{background:var(--bg1);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.sechd{padding:9px 13px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;background:var(--bg2)}
+.sectitle{font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#0d1117;flex:1}
+.badge{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:99px}
+.badge.c{background:var(--cyan-d);color:#0d1117;border:1px solid rgba(0,229,204,.2)}
+.badge.r{background:var(--red-d);color:#8b0000;border:1px solid rgba(255,68,102,.25)}
 
-/*PANTALLA: SESIONES*/
-#sc-ses { background:var(--bg); }
-.ses-body { flex:1; overflow-y:auto; padding:8px 10px 10px; margin-bottom:var(--nav-h); }
+/* ── Bars ── */
+.bars{padding:12px 14px;display:flex;flex-direction:column;gap:9px}
+.br{display:flex;align-items:center;gap:9px}
+.bl{font-family:var(--mono);font-size:8.5px;color:#0d1117;width:60px;flex-shrink:0}
+.bt{flex:1;height:6px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.bf{height:100%;border-radius:4px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.bf.i{background:linear-gradient(90deg,#1a6fb0,var(--blue))}
+.bf.e{background:linear-gradient(90deg,var(--cyan2),var(--cyan))}
+.bf.a{background:linear-gradient(90deg,#b02040,var(--red))}
+.bv{font-family:var(--mono);font-size:9.5px;color:#0d1117;width:32px;text-align:right;flex-shrink:0}
+.no-apnea{padding:10px 14px;font-family:var(--mono);font-size:10px;color:#2d3748}
 
-.search-wrap { position:relative; margin-bottom:6px; }
-.search-wrap svg { position:absolute; left:9px; top:50%; transform:translateY(-50%); color:var(--txt3); pointer-events:none; }
-.search-wrap input {
-  width:100%; background:var(--bg3); border:1px solid var(--line2);
-  border-radius:8px; color:var(--txt); font-family:var(--mono); font-size:11px;
-  padding:9px 10px 9px 30px;
-}
-.search-wrap input:focus { border-color:var(--cyan); }
+/* ── Event stream (live) ── */
+.ev-stream{max-height:210px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.ev-row{padding:8px 12px;border-bottom:1px solid rgba(180,195,220,.5);display:flex;align-items:center;gap:8px}
+.ev-row:last-child{border-bottom:none}
+.tag{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-family:var(--mono);font-size:8.5px;font-weight:500;flex-shrink:0}
+.tag.inhala{background:var(--blue-d);color:#0d5c6e;border:1px solid rgba(77,184,255,.2)}
+.tag.exhala{background:var(--cyan-d);color:#0d5c6e;border:1px solid rgba(0,229,204,.2)}
+.tag.apnea_terap{background:var(--yellow-d);color:#5a3e00;border:1px solid rgba(255,180,0,.3)}
+.tag.apnea_patol{background:var(--red-d);color:#8b0000;border:1px solid rgba(255,68,102,.35);font-weight:700}
+.ev-ts{font-family:var(--mono);font-size:9px;color:#2d3748;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev-val{font-family:var(--mono);font-size:12px;color:#0d1117;white-space:nowrap}
 
-.ses-count { font-family:var(--mono); font-size:9px; color:var(--txt3); padding:2px 2px 6px; letter-spacing:1px; text-transform:uppercase; }
+/* ── Alert bar ── */
+.alert-bar{display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--red-d);border-bottom:1px solid rgba(255,68,102,.2);font-size:11px;color:#8b0000}
+.alert-bar strong{color:#8b0000}
 
-.import-lbl {
-  display:flex; align-items:center; justify-content:center; gap:8px;
-  padding:9px; border-radius:8px; margin-bottom:8px;
-  background:var(--bg2); border:1px dashed var(--line2);
-  color:var(--txt2); font-size:11px; font-family:var(--mono); cursor:pointer;
-}
-.import-lbl:active { border-color:var(--cyan); color:var(--cyan); }
+/* ── Table ── */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse}
+thead th{padding:7px 10px;text-align:left;font-family:var(--mono);font-size:7.5px;letter-spacing:1px;text-transform:uppercase;color:#0d1117;background:var(--bg2);border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;z-index:2}
+tbody tr{border-bottom:1px solid rgba(180,195,220,.5)}
+tbody tr:last-child{border-bottom:none}
+td{padding:7px 10px;font-size:11px;color:#0d1117;white-space:nowrap}
 
-.si {
-  padding:11px 12px; border-radius:8px; margin-bottom:4px;
-  background:var(--bg1); border:1px solid transparent; cursor:pointer;
-  display:flex; flex-direction:column; gap:3px;
-}
-.si:active { background:var(--bg2); }
-.si-top   { display:flex; align-items:center; }
-.si-id    { font-family:var(--mono); font-size:9px; color:var(--txt3); }
-.si-arr   { margin-left:auto; color:var(--txt3); font-size:18px; line-height:1; }
-.si-name  { font-size:13px; font-weight:600; color:#fff; }
-.si-name.empty { color:var(--txt2); font-weight:400; font-style:italic; font-size:12px; }
-.si-date  { font-family:var(--mono); font-size:9px; color:var(--txt3); }
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:6px;font-family:var(--head);font-size:11px;font-weight:600;cursor:pointer;border:1px solid transparent;-webkit-tap-highlight-color:transparent;outline:none}
+.btn-p{background:var(--cyan);color:#000;border-color:var(--cyan)}.btn-p:active{background:var(--cyan2)}
+.btn-g{background:transparent;color:#0d1117;border-color:var(--line2)}.btn-g:active{background:var(--bg3)}
+.btn-danger{background:var(--red-d);color:#8b0000;border-color:rgba(255,68,102,.3);width:100%;justify-content:center;margin-top:4px}
+.btn-danger:active{background:rgba(255,68,102,.15)}
 
-.empty-state { display:flex; flex-direction:column; align-items:center; padding:52px 24px; gap:8px; }
-.empty-icon  { font-size:38px; opacity:.2; }
-.empty-txt   { font-family:var(--mono); font-size:10px; color:var(--txt3); text-align:center; line-height:1.7; }
+/* ── Sheet overlay ── */
+.sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.40);z-index:100;display:none;flex-direction:column;justify-content:flex-end;opacity:0;transition:opacity .25s}
+.sheet-overlay.open{display:flex}
+.sheet-overlay.visible{opacity:1}
+.sheet{background:var(--bg1);border-radius:18px 18px 0 0;max-height:92dvh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.sheet-overlay.visible .sheet{transform:translateY(0)}
+.sheet-handle-wrap{padding:10px;display:flex;justify-content:center;flex-shrink:0;cursor:pointer}
+.sheet-handle{width:36px;height:4px;background:var(--line2);border-radius:2px}
+.sheet-scroll{flex:1;overflow-y:auto;padding:0 14px 32px;-webkit-overflow-scrolling:touch}
 
-/*PANTALLA: DETALLE SESIÓN*/
-#sc-det { background:var(--bg); }
+/* ── Sheet content ── */
+.sheet-hd{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.ses-num{flex-shrink:0;width:42px;height:42px;border-radius:9px;background:var(--cyan-d);border:1px solid rgba(0,229,204,.2);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.sn-lbl{font-family:var(--mono);font-size:7px;color:#0d5c6e;letter-spacing:1px;text-transform:uppercase}
+.sn-val{font-family:var(--mono);font-size:17px;font-weight:500;color:#0d1117;line-height:1}
+.ses-info{flex:1;min-width:0}
+.ses-big{font-size:14px;font-weight:700;color:#0d1117;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ses-big.empty{color:#2d3748;font-weight:400;font-style:italic;font-size:12px}
+.ses-dates{font-family:var(--mono);font-size:9px;color:#2d3748;margin-top:2px}
+.ses-notes{font-size:11px;color:#0d1117;margin-top:3px}
 
-.back-hd {
-  flex-shrink:0; height:var(--hd-h);
-  background:var(--bg1); border-bottom:1px solid var(--line);
-  display:flex; align-items:center; gap:10px; padding:0 12px; z-index:10;
-}
-.back-btn {
-  display:flex; align-items:center; gap:5px;
-  background:none; color:var(--txt2); font-size:11px; font-family:var(--mono);
-  padding:6px 10px; border-radius:6px; border:1px solid var(--line2);
-}
-.back-btn:active { background:var(--bg3); }
-.back-title { font-size:13px; font-weight:600; color:#fff; }
+/* ── Assign form ── */
+.abox{background:var(--bg2);border:1px solid var(--line2);border-radius:8px;padding:12px;display:none;flex-direction:column;gap:10px;margin-bottom:10px}
+.abox.open{display:flex}
+.abox-title{font-size:10px;font-family:var(--mono);letter-spacing:1px;text-transform:uppercase;color:#0d1117}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-family:var(--mono);font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:#0d1117}
+.field input,.field textarea,.field select{background:var(--bg3);border:1px solid var(--line2);border-radius:5px;color:#0d1117;font-family:var(--head);font-size:13px;padding:8px 10px;outline:none;-webkit-appearance:none;transition:border-color .15s;width:100%}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--cyan)}
+.field textarea{resize:none;min-height:64px}
+.field select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236a88aa'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.fbtns{display:flex;gap:7px}
+/* ── Exercise badge in session list ── */
+.pill.ej{color:#0d1117;background:var(--blue-d);border:1px solid rgba(77,184,255,.2)}
+/* ── Clinical metrics with traffic light ── */
+.stat.ok  {border-color:rgba(0,229,204,.3);background:rgba(0,229,204,.04)}
+.stat.warn{border-color:rgba(255,180,0,.35);background:rgba(255,180,0,.05)}
+.stat.bad {border-color:rgba(255,68,102,.35);background:rgba(255,68,102,.05)}
+.sv.ok  {color:#0d1117}
+.sv.warn{color:#5a3e00}
+.sv.bad {color:#8b0000}
+/* ── Rango objetivo badge ── */
+.rango{font-family:var(--mono);font-size:8px;color:#2d3748;margin-top:1px}
+.rango.ok  {color:#0d5c6e}
+.rango.warn{color:#5a3e00}
+.rango.bad {color:#8b0000}
+/* ── Exercise info card ── */
+.ej-card{background:var(--bg2);border:1px solid var(--line2);border-radius:8px;padding:10px 12px;margin-bottom:10px;display:flex;flex-direction:column;gap:4px}
+.ej-card-title{font-family:var(--mono);font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#0d1117}
+.ej-card-name{font-size:12px;font-weight:600;color:#0d1117}
+.ej-card-obj{font-family:var(--mono);font-size:9px;color:#2d3748;line-height:1.5}
 
-.det-body  { flex:1; overflow-y:auto; padding:10px 10px 80px; }
-.det-acts  {
-  position:fixed; bottom:0; left:0; right:0;
-  background:var(--bg1); border-top:1px solid var(--line);
-  padding:10px 12px; display:flex; gap:8px;
-  padding-bottom:calc(10px + var(--safe-b)); z-index:50;
-}
+/* ── Apnea toast ── */
+.apnea-toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--red);color:#0d1117;border-radius:8px;padding:9px 18px;font-family:var(--mono);font-size:11px;font-weight:700;z-index:200;display:none;white-space:nowrap;box-shadow:0 4px 24px rgba(255,68,102,.5);animation:pulse-r .8s infinite alternate}
+@keyframes pulse-r{from{box-shadow:0 4px 15px rgba(255,68,102,.3)}to{box-shadow:0 4px 28px rgba(255,68,102,.7)}}
 
-/* Tarjeta de encabezado en sesiones*/
-.shd-card {
-  background:var(--bg1); border:1px solid var(--line); border-radius:10px;
-  padding:14px; display:flex; gap:12px; align-items:flex-start; margin-bottom:10px;
-}
-.snum {
-  width:44px; height:44px; flex-shrink:0; border-radius:9px;
-  background:var(--cyan-d); border:1px solid rgba(0,229,204,.2);
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-}
-.snum-l { font-family:var(--mono); font-size:7px; color:var(--cyan); letter-spacing:1px; text-transform:uppercase; }
-.snum-v { font-family:var(--mono); font-size:18px; font-weight:500; color:var(--cyan); line-height:1; }
-.sinfo  { flex:1; min-width:0; }
-.sname  { font-size:15px; font-weight:700; color:#fff; }
-.sname.empty { color:var(--txt2); font-weight:400; font-style:italic; font-size:12px; }
-.sdates { font-family:var(--mono); font-size:9px; color:var(--txt3); margin-top:3px; }
-.snotes { font-size:11px; color:var(--txt2); margin-top:4px; }
-
-/* Asignar*/
-.aform {
-  background:var(--bg2); border:1px solid var(--line2); border-radius:10px;
-  padding:14px; margin-bottom:10px; display:flex; flex-direction:column; gap:10px;
-}
-.aform-title { font-family:var(--mono); font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--txt2); }
-.field label { display:block; font-family:var(--mono); font-size:8px; letter-spacing:1.2px; text-transform:uppercase; color:var(--txt3); margin-bottom:5px; }
-.field input,.field textarea {
-  width:100%; background:var(--bg3); border:1px solid var(--line2);
-  border-radius:6px; color:var(--txt); font-family:var(--head); font-size:12px; padding:9px 11px;
-}
-.field textarea { resize:none; height:64px; }
-.field input:focus,.field textarea:focus { border-color:var(--cyan); }
-
-/*Pestañas*/
-.tabs-row { display:flex; gap:4px; margin-bottom:10px; flex-wrap:wrap; }
-.tab {
-  padding:6px 12px; border-radius:6px; font-family:var(--mono); font-size:9px;
-  border:1px solid var(--line2); color:var(--txt3); background:var(--bg2);
-  letter-spacing:.5px; cursor:pointer; transition:all .15s;
-}
-.tab.on { background:var(--cyan-d); color:var(--cyan); border-color:rgba(0,229,204,.3); }
-.tc { display:none; }
-.tc.on { display:block; }
-
-/*Tarjeta de articulaciones*/
-.jgrid { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
-.jcard {
-  background:var(--bg1); border:1px solid var(--line); border-radius:8px; padding:11px;
-  display:flex; flex-direction:column; gap:5px;
-}
-.jcard-ttl {
-  font-size:8px; font-family:var(--mono); letter-spacing:1px; text-transform:uppercase;
-  color:var(--txt3); display:flex; align-items:center; gap:5px;
-}
-.dot2 { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
-.jbody { display:flex; gap:8px; }
-.jval-lbl  { font-family:var(--mono); font-size:7px; color:var(--txt3); text-transform:uppercase; letter-spacing:1px; margin-bottom:1px; }
-.jval-num  { font-family:var(--mono); font-size:20px; font-weight:500; line-height:1; }
-.jval-unit { font-family:var(--mono); font-size:8px; color:var(--txt3); }
-.divider   { height:1px; background:var(--line); }
-.mv-row    { display:flex; align-items:center; justify-content:space-between; }
-.mv-name   { font-size:8px; color:var(--txt2); font-family:var(--mono); }
-.mv-ang    { font-family:var(--mono); font-size:11px; font-weight:600; }
-
-/*Tabla de registro*/
-.tbl-wrap { border-radius:8px; border:1px solid var(--line); overflow-x:auto; }
-table     { width:100%; border-collapse:collapse; }
-thead th  {
-  padding:7px 8px; text-align:left; font-family:var(--mono); font-size:7px;
-  letter-spacing:1.2px; text-transform:uppercase; color:var(--txt3);
-  background:var(--bg2); border-bottom:1px solid var(--line); white-space:nowrap;
-}
-tbody td  { padding:6px 8px; font-size:10px; color:var(--txt); border-bottom:1px solid rgba(28,38,64,.4); }
-tbody tr:last-child td { border-bottom:none; }
-.badge    { font-family:var(--mono); font-size:8px; padding:2px 6px; border-radius:99px; background:var(--cyan-d); color:var(--cyan); border:1px solid rgba(0,229,204,.2); }
-.rt-sup   { display:inline-flex; padding:2px 6px; border-radius:4px; font-family:var(--mono); font-size:8px; font-weight:600; background:var(--blue-d); color:var(--blue); border:1px solid rgba(77,184,255,.2); }
-.rt-inf   { display:inline-flex; padding:2px 6px; border-radius:4px; font-family:var(--mono); font-size:8px; font-weight:600; background:var(--orange-d); color:var(--orange); border:1px solid rgba(255,140,66,.2); }
-
-/*Botones*/
-.btn { padding:9px 16px; border-radius:7px; font-size:11px; font-weight:600; transition:all .15s; border:1px solid transparent; cursor:pointer; }
-.btn:active { transform:scale(.97); }
-.btn-p { background:var(--cyan); color:#000; border-color:var(--cyan); }
-.btn-g { background:transparent; color:var(--txt2); border-color:var(--line2); }
-.btn-g:active { background:var(--bg3); }
-.btn-d { background:transparent; color:var(--red); border-color:rgba(255,68,102,.3); }
-.btn-row { display:flex; gap:8px; }
-
-/*Notificaciones*/
-#toast {
-  position:fixed; bottom:calc(var(--nav-h) + 14px); left:50%;
-  transform:translateX(-50%) translateY(14px);
-  background:var(--bg1); border:1px solid var(--line2); border-radius:99px;
-  padding:8px 18px; font-family:var(--mono); font-size:10px; color:var(--txt);
-  z-index:300; opacity:0; transition:all .22s; white-space:nowrap;
-  box-shadow:0 4px 20px rgba(0,0,0,.5);
-}
-#toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
-#toast.g    { border-color:rgba(0,229,204,.3); color:var(--cyan); }
-
-/*Cargando*/
-#ld {
-  position:fixed; inset:0; background:var(--bg); z-index:500;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
-  transition:opacity .4s;
-}
-.ld-logo { width:58px; height:58px; border-radius:17px; background:linear-gradient(135deg,var(--cyan),var(--blue)); display:flex; align-items:center; justify-content:center; box-shadow:0 0 24px rgba(0,229,204,.4); }
-.ld-logo svg { width:26px; height:26px; }
-.ld-title { font-size:20px; font-weight:700; color:#fff; }
-#ld-msg  { font-family:var(--mono); font-size:10px; color:var(--txt3); letter-spacing:.8px; text-align:center; padding:0 28px; }
-.ld-bar  { width:150px; height:3px; background:var(--line2); border-radius:99px; overflow:hidden; }
-.ld-fill { height:100%; background:linear-gradient(90deg,var(--cyan),var(--blue)); border-radius:99px; animation:ldbar 1.4s ease-in-out infinite; }
-@keyframes ldbar { 0%{transform:translateX(-100%)} 100%{transform:translateX(500%)} }
-
-/* HTTPS error */
-#https-err {
-  position:fixed; inset:0; background:var(--bg); z-index:600;
-  display:none; flex-direction:column; align-items:center; justify-content:center;
-  gap:14px; padding:32px;
-}
-#https-err h2 { color:var(--orange); font-size:18px; text-align:center; }
-#https-err p  { font-family:var(--mono); font-size:10px; color:var(--txt2); text-align:center; line-height:1.8; }
-
-::-webkit-scrollbar { width:3px; }
-::-webkit-scrollbar-thumb { background:var(--line2); border-radius:3px; }
+/* ── Scrollbars ── */
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:3px}
 </style>
 </head>
 <body>
+<div class="app">
 
-<!--CARGANDO-->
-<div id="ld">
-  <div class="ld-logo">
+<!-- Header -->
+<header>
+  <div class="logo-mark">
     <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round">
-      <circle cx="12" cy="5" r="2"/><line x1="12" y1="7" x2="12" y2="13"/>
-      <line x1="8" y1="9" x2="12" y2="11"/><line x1="16" y1="9" x2="12" y2="11"/>
-      <line x1="10" y1="13" x2="8" y2="20"/><line x1="14" y1="13" x2="16" y2="20"/>
+      <polyline points="2,12 5,12 7,5 9,19 11,10 13,15 15,12 22,12"/>
     </svg>
   </div>
-  <div class="ld-title">ROMAnalyzer</div>
-  <div id="ld-msg">Cargando modelo de IA…</div>
-  <div class="ld-bar"><div class="ld-fill"></div></div>
-</div>
+  <div>
+    <div class="logo-name">Respiratory Monitor</div>
+    <div class="logo-tag">Android · BLE</div>
+  </div>
+  <div class="hd-right">
+    <button class="ble-btn" id="bleBtn" onclick="toggleBLE()">
+      <div class="dot" id="dot"></div>
+      <span id="bleStatus">Connect</span>
+    </button>
+  </div>
+</header>
 
-<!-- HTTPS ERROR-->
-<div id="https-err">
-  <h2>⚠ Se requiere HTTPS</h2>
-  <p>Para acceder a la cámara desde un celular<br>el archivo debe servirse desde HTTPS.<br><br>Súbelo a GitHub Pages o usa localhost.</p>
-</div>
+<!-- Content -->
+<div class="content">
 
-<!--NOTIFICACIONES-->
-<div id="toast"></div>
-
-<!--CÁMARA-->
-<div id="sc-cam" class="screen">
-  <div class="hd">
-    <div class="logo-mark">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round">
-        <circle cx="12" cy="5" r="2"/><line x1="12" y1="7" x2="12" y2="13"/>
-        <line x1="8" y1="9" x2="12" y2="11"/><line x1="16" y1="9" x2="12" y2="11"/>
-        <line x1="10" y1="13" x2="8" y2="20"/><line x1="14" y1="13" x2="16" y2="20"/>
-      </svg>
+  <!-- SESSIONS -->
+  <div class="tab-panel active" id="panel-sessions">
+    <div class="search-bar">
+      <div class="sw">
+        <span class="si-ico">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </span>
+        <input type="text" id="searchInput" placeholder="Search patient..." oninput="onSearch(this.value)">
+      </div>
     </div>
-    <div><div class="logo-name">ROMAnalyzer</div><div class="logo-tag">VISOR DE SESIONES</div></div>
-    <div class="hd-right">
-      <div class="chip"><div class="dot" id="sDot"></div><span id="sTxt">Iniciando</span></div>
+    <div class="ses-count">
+      <span id="sesCount">0 sessions</span>
+      <div class="io-btns">
+        <button class="io-btn" onclick="importJSON()">⬆ Import</button>
+        <button class="io-btn" onclick="exportJSON()">⬇ Export</button>
+      </div>
     </div>
+    <div class="ses-list" id="sesList"></div>
   </div>
 
-  <div class="cam-wrap">
-    <video id="vid" autoplay playsinline muted></video>
-    <canvas id="cvs"></canvas>
-    <div class="flash" id="flash"></div>
-
-    <div class="fab-col">
-      <button class="fab fab-s" onclick="saveSession()" title="Guardar (S)">💾</button>
-      <button class="fab fab-r" onclick="resetSession()" title="Reset (R)">🔄</button>
-      <button class="fab fab-c" onclick="switchCam()" title="Cambiar cámara" id="fab-flip">🔁</button>
-    </div>
-
-    <div class="ap">
-      <div class="ap-row" id="ap-sup"></div>
-      <div class="ap-row" id="ap-inf"></div>
-    </div>
+  <!-- LIVE -->
+  <div class="tab-panel" id="panel-live">
+    <div class="live-panel" id="livePanel"></div>
   </div>
+
 </div>
 
-<!-- SESIONES -->
-<div id="sc-ses" class="screen off">
-  <div class="hd">
-    <div class="logo-mark">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round">
-        <circle cx="12" cy="5" r="2"/><line x1="12" y1="7" x2="12" y2="13"/>
-        <line x1="8" y1="9" x2="12" y2="11"/><line x1="16" y1="9" x2="12" y2="11"/>
-        <line x1="10" y1="13" x2="8" y2="20"/><line x1="14" y1="13" x2="16" y2="20"/>
-      </svg>
-    </div>
-    <div><div class="logo-name">Sesiones</div><div class="logo-tag">Historial</div></div>
-  </div>
-  <div class="ses-body">
-    <div class="search-wrap">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" id="q" placeholder="Buscar paciente…" oninput="filterSes(this.value)">
-    </div>
-    <div class="ses-count" id="ses-count">0 sesiones</div>
-    <label class="import-lbl">
-      📂 Importar JSON desde PC
-      <input type="file" accept=".json" style="display:none" onchange="importJSON(this)">
-    </label>
-    <div id="ses-list"></div>
-  </div>
-</div>
-
-<!-- DETALLES -->
-<div id="sc-det" class="screen off">
-  <div class="back-hd">
-    <button class="back-btn" onclick="goBack()">← Atrás</button>
-    <div class="back-title" id="det-title">Sesión</div>
-  </div>
-  <div class="det-body" id="det-body"></div>
-  <div class="det-acts" id="det-acts"></div>
-</div>
-
-<!-- NAVEGACIÓN -->
-<nav class="bot-nav" id="botnav">
-  <button class="nb on" id="nb-cam" onclick="goScreen('cam')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-      <circle cx="12" cy="13" r="4"/>
+<!-- Tab bar -->
+<div class="tabs">
+  <div class="tab active" id="tab-sessions" onclick="switchTab('sessions')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>
     </svg>
-    Cámara
-  </button>
-  <button class="nb" id="nb-ses" onclick="goScreen('ses')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-      <polyline points="14 2 14 8 20 8"/>
-      <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+    Sessions
+  </div>
+  <div class="tab" id="tab-live" onclick="switchTab('live')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="2,12 5,12 7,5 9,19 11,10 13,15 15,12 22,12"/>
     </svg>
-    Sesiones
-  </button>
-</nav>
+    Live
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<!-- Apnea toast -->
+<div class="apnea-toast" id="apneaToast">🚨 PATHOLOGICAL APNEA</div>
+
+<!-- Session detail sheet -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="onOverlayClick(event)">
+  <div class="sheet" id="sheet">
+    <div class="sheet-handle-wrap" onclick="closeSheet()"><div class="sheet-handle"></div></div>
+    <div class="sheet-scroll" id="sheetContent"></div>
+  </div>
+</div>
+
+<!-- Hidden file input for import -->
+<input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleImport(event)">
 
 <script>
 'use strict';
+//  API — Turso via PHP backend
+const API_URL = 'https://backendresp.onrender.com/api/sesiones.php';
+const API_KEY = '-xK9mP3qL7nR2wT8v';   
+const AH = { 'X-API-Key': API_KEY };
 
-//operaciones matemáticas
-const DEG=r=>r*180/Math.PI;
-function vNorm(v){ return Math.sqrt(v.reduce((s,x)=>s+x*x,0)); }
-function vDot(a,b){ return a.reduce((s,x,i)=>s+x*b[i],0); }
-function vecAngle(v1,v2){
-  const n1=vNorm(v1),n2=vNorm(v2);
-  if(n1<1e-6||n2<1e-6) return 0;
-  return DEG(Math.acos(Math.max(-1,Math.min(1,vDot(v1,v2)/(n1*n2)))));
-}
-function angle2d(p1,p2,p3){
-  return vecAngle([p1.x-p2.x,p1.y-p2.y],[p3.x-p2.x,p3.y-p2.y]);
-}
-function smoothAngle(buf,val,maxLen=5,clip=15){
-  if(buf.length>0) val=Math.max(buf[buf.length-1]-clip,Math.min(buf[buf.length-1]+clip,val));
-  buf.push(val);
-  if(buf.length>maxLen) buf.shift();
-  return buf.reduce((s,v)=>s+v,0)/buf.length;
+async function apiFetch(path, opts={}) {
+  try {
+    const r = await fetch(API_URL + path, {
+      ...opts,
+      headers: { ...AH, ...(opts.headers||{}) }
+    });
+    if (!r.ok) { console.error('[API]', r.status, path); return null; }
+    return r.json();
+  } catch(e) { console.error('[API]', e, path); return null; }
 }
 
-// análisis
-const THR=12, VIS=0.50;
-const META={
-  flexion_hombro:          {n:'Flexión',      r:'superior'},
-  extension_hombro:        {n:'Extensión',    r:'superior'},
-  abduccion_hombro:        {n:'Abducción',    r:'superior'},
-  flexion_codo:            {n:'Flexión',      r:'superior'},
-  extension_codo:          {n:'Extensión',    r:'superior'},
-  flexion_cadera:          {n:'Flexión',      r:'inferior'},
-  extension_cadera:        {n:'Extensión',    r:'inferior'},
-  abduccion_cadera:        {n:'Abducción',    r:'inferior'},
-  flexion_rodilla:         {n:'Flexión',      r:'inferior'},
-  extension_rodilla:       {n:'Extensión',    r:'inferior'},
-  dorsiflexion_tobillo:    {n:'Dorsiflexión', r:'inferior'},
-  flexion_plantar_tobillo: {n:'Flex.Plantar', r:'inferior'},
+// In-memory cache for current session (avoids constant refetch)
+const cache = { sessions: null, events: {} };
+
+const DB = {
+  // ── Sesiones ──
+  async getSessions() {
+    if (cache.sessions) return cache.sessions;
+    const d = await apiFetch('');
+    cache.sessions = Array.isArray(d) ? d : [];
+    return cache.sessions;
+  },
+  invalidateSessions() { cache.sessions = null; },
+
+  async saveSessions(arr) {
+    // Not used directly — mutations go through specific methods
+    cache.sessions = arr;
+  },
+
+  // ── Eventos ──
+  async getEvents(sid) {
+    if (cache.events[sid]) return cache.events[sid];
+    const d = await apiFetch('?sid='+sid+'&action=events');
+    cache.events[sid] = Array.isArray(d) ? d : [];
+    return cache.events[sid];
+  },
+  invalidateEvents(sid) { delete cache.events[sid]; },
+
+  async saveEvents(sid, arr) {
+    cache.events[sid] = arr; // only updates local cache
+  },
+
+  // ── IDs ──
+  async nextSessionId() {
+    const d = await apiFetch('?action=nextid');
+    return d ? d.nextId : 1;
+  },
+  async nextEventId() {
+    const d = await apiFetch('?action=nexteventid');
+    return d ? d.nextId : 1;
+  },
+
+  // ── Mutaciones ──
+  async createSession(ses) {
+    const r = await apiFetch('', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(ses) });
+    this.invalidateSessions();
+    return r?.ok;
+  },
+  async updateSession(sid, patch) {
+    await apiFetch('?sid='+sid, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(patch) });
+    this.invalidateSessions();
+  },
+  async deleteSession(sid) {
+    await apiFetch('?sid='+sid, { method:'DELETE' });
+    this.invalidateSessions();
+    this.invalidateEvents(sid);
+  },
+  async addEvent(sid, ev) {
+    await apiFetch('?sid='+sid+'&action=event', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(ev) });
+    this.invalidateEvents(sid);
+  },
 };
-// Hombro 2D: usa solo X e Y (sin Z ni detectPlane)
-// Flexion: codo sube sobre hombro | Extension: codo baja | Abduccion: codo se aleja lateral
-function analyzeShoulder(sh,el,hip){
-  const ang=angle2d(hip,sh,el);
-  const ref={x:sh.x,y:sh.y+0.3};
-  const abd=angle2d(ref,sh,el);
-  if(ang>THR&&el.y<sh.y-0.01) return ['flexion_hombro',ang];
-  if(el.y>sh.y+0.02){
-    const ext=Math.max(0,Math.min(45,ang));
-    if(ext>THR) return ['extension_hombro',ext];
+
+// ══════════════════════════════════════════════════
+//  BLE CONSTANTS
+// ══════════════════════════════════════════════════
+const BLE_DEVICE_NAME = 'RespMonitor';
+const NUS_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+const NUS_TX_UUID      = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+const TIPOS_VALIDOS    = ['INHALA','EXHALA','APNEA_TERAP','APNEA_PATOL','CICLO'];
+
+// ══════════════════════════════════════════════════
+//  APP STATE
+// ══════════════════════════════════════════════════
+const app = {
+  bleDevice:   null,
+  bleChar:     null,
+  connected:   false,
+  currentSid:  null,
+  buffer:      '',
+  liveEvents:  [],   // newest first, max 100
+  liveStats:   { ciclos:0, apneas:0, avgTi:'—', avgTe:'—', avgIe:'—', avgAp:null, maxAp:null, bpm:'—', rpmActivo:'—', rpmCiclo:'—', avgPausa:null },
+  searchQuery: '',
+};
+
+// ══════════════════════════════════════════════════
+//  BLE
+// ══════════════════════════════════════════════════
+async function toggleBLE() {
+  if (app.connected) { disconnectBLE(); }
+  else               { await connectBLE(); }
+}
+
+async function connectBLE() {
+  if (!navigator.bluetooth) {
+    alert('Web Bluetooth is not available.\nUse Chrome on Android (not Samsung Internet or Firefox).');
+    return;
   }
-  if(Math.abs(el.x-sh.x)>Math.abs(el.y-sh.y)*0.45&&abd>THR) return ['abduccion_hombro',abd];
-  return [null,0];
-}
-// Codo 2D: flex = 180 - angulo hombro->codo->muneca en plano XY
-function analyzeElbow(sh,el,wr){
-  const flex=Math.max(0,Math.min(145,180-angle2d(sh,el,wr)));
-  if(flex>THR) return ['flexion_codo',flex];
-  if(flex<8)   return ['extension_codo',0];
-  return [null,0];
-}
-// Cadera: referencia de tronco corregida
-// En lugar de usar el punto hombro como extremo de un vector fijo,
-// se construye el vector tronco real (cadera→hombro) normalizado,
-// lo que es correcto aunque el torso esté inclinado (sentadilla, peso frontal)
-function analyzeHip(sh,hip,kn,side){
-  // Vector tronco: desde cadera hacia hombro (dirección real del segmento)
-  const trunk=[sh.x-hip.x,sh.y-hip.y];
-  const leg  =[kn.x-hip.x,kn.y-hip.y];
+  setBLEUI('connecting');
+  try {
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [{ name: BLE_DEVICE_NAME }],
+      optionalServices: [NUS_SERVICE_UUID]
+    });
+    app.bleDevice = device;
+    device.addEventListener('gattserverdisconnected', onBLEDisconnected);
 
-  // Flexión: rodilla sube por encima de la cadera → ángulo entre tronco y pierna
-  const va=vecAngle(trunk,leg);
-  const flex=kn.y<hip.y-0.05?Math.min(va,125):0;
+    const server  = await device.gatt.connect();
+    const service = await server.getPrimaryService(NUS_SERVICE_UUID);
+    const char    = await service.getCharacteristic(NUS_TX_UUID);
+    app.bleChar   = char;
 
-  // Extensión: rodilla por debajo y algo lateral → complemento del ángulo tronco-pierna
-  const ext=(kn.y>hip.y&&Math.abs(kn.x-hip.x)>Math.abs(kn.y-hip.y)*0.2)?Math.min(180-va,30):0;
+    char.addEventListener('characteristicvaluechanged', onBLEData);
+    await char.startNotifications();
 
-  // Abducción: desplazamiento lateral del knee respecto a la cadera (máx clínico 45°)
-  let abd=0;
-  if(Math.abs(kn.x-hip.x)>Math.abs(kn.y-hip.y)*0.5){
-    if(side==='derecho'  &&kn.x<hip.x) abd=Math.min(va,45);
-    if(side==='izquierdo'&&kn.x>hip.x) abd=Math.min(va,45);
-  }
-
-  if(flex>THR&&flex>abd&&flex>ext) return ['flexion_cadera',flex];
-  if(ext>THR&&ext>abd)             return ['extension_cadera',ext];
-  if(abd>THR)                      return ['abduccion_cadera',abd];
-  return [null,0];
-}
-function analyzeKnee(hip,kn,an){
-  const ul=[hip.x-kn.x,hip.y-kn.y],ll=[an.x-kn.x,an.y-kn.y];
-  const ang=vecAngle(ul,ll);
-  const flex=Math.max(0,Math.min(140,180-ang));
-  if(flex>10) return ['flexion_rodilla',flex];
-  return ['extension_rodilla',ang>160?0:180-ang];
-}
-// Tobillo: usa talón [29/30] como ref. distal (más estable y visible que dedo índice)
-// Tobillo: ángulo de la pierna respecto a la vertical
-// No depende de ningún punto del pie — solo usa rodilla y tobillo (landmarks más estables)
-// Referencia: vector vertical [0,-1] (hacia arriba en coords de imagen)
-// Posición neutra (pie plano, pierna vertical) → ángulo pierna-vertical ≈ 0°
-// Dorsiflexión: tobillo avanza, pierna se inclina hacia adelante → ángulo positivo frontal
-// Flexión plantar: talón sube, pierna se inclina hacia atrás → ángulo positivo posterior
-// Se usa la componente X del vector pierna para distinguir hacia dónde se inclina
-const _ankleLastAng={derecho:0,izquierdo:0};
-function analyzeAnkle(kn, an, side){
-  if((kn.visibility||0) < 0.60) return [null, 0];
-  if((an.visibility||0) < 0.70) return [null, 0];
-
-  // Vector pierna: tobillo → rodilla (apunta hacia arriba)
-  const px = kn.x - an.x;
-  const py = kn.y - an.y;  // en coords imagen Y crece hacia abajo, rodilla tiene Y menor → py negativo
-
-  if(Math.hypot(px, py) < 0.02) return [null, 0];
-
-  // Ángulo entre la pierna y la vertical pura [0,-1]
-  const vertical = [0, -1];
-  const ang = vecAngle([px, py], vertical); // 0° = pierna recta, >0° = inclinada
-
-  // Filtro de coherencia: descarta saltos > 15° entre frames
-  const last = _ankleLastAng[side] ?? 0;
-  if(Math.abs(ang - last) > 15){ _ankleLastAng[side] = last; return [null, 0]; }
-  _ankleLastAng[side] = ang;
-  const delta = Math.abs(ang - last);
-  if(delta > 15) { _ankleLastAng[side] = last; return [null, 0]; } // ruido
-  if(delta < 2)  { return [null, 0]; }  // demasiado quieto → reposo
-  // px > 0 significa que el tobillo está adelantado respecto a la rodilla → dorsiflexión
-  // px < 0 significa que el tobillo está detrás de la rodilla → flexión plantar
-  // (espejo: en cámara frontal/usuario los ejes se invierten, compensamos con Math.abs y px)
-  const dorsi  = Math.max(0, Math.min(20, ang));
-  const plantar = Math.max(0, Math.min(45, ang));
-
-  // Usamos la dirección horizontal de la inclinación para clasificar
-  if(Math.abs(px) < 0.03) return [null, 0]; // pierna demasiado vertical para clasificar
-
-  if(px > 0 && dorsi >= 8)   return ['dorsiflexion_tobillo',    dorsi];
-  if(px < 0 && plantar >= 8) return ['flexion_plantar_tobillo', plantar];
-  return [null, 0];
-}
-
-// estado
-function localISO(d=new Date()){
-  return d.toLocaleString('sv-SE').replace('T',' ');
-}
-const SIDES=['derecho','izquierdo'];
-const JOINTS=['hombro','codo','cadera','rodilla','tobillo'];
-const J_SUP=['hombro','codo'],J_INF=['cadera','rodilla','tobillo'];
-const COLS={hombro:'var(--blue)',codo:'var(--cyan)',cadera:'var(--orange)',rodilla:'var(--green)',tobillo:'var(--purple)'};
-function mkState(){
-  const s={};
-  for(const side of SIDES){s[side]={};
-    for(const j of JOINTS) s[side][j]={buf:[],angle:0,max:0,min:180,exercise:'reposo'};
-  }
-  return s;
-}
-function mkMovs(){
-  const m={};
-  for(const side of SIDES) for(const j of JOINTS) m[`${j}_${side}`]={};
-  return m;
-}
-let jData=mkState(),registro=[],movs=mkMovs(),ticks=0,sesStart=null;
-function updateJoint(side,joint,ex,angle){
-  const d=jData[side][joint];
-  d.exercise=ex;d.angle=smoothAngle(d.buf,angle);
-  if(ex!=='reposo'&&d.angle>0){d.max=Math.max(d.max,d.angle);d.min=Math.min(d.min,d.angle);}
-}
-function tick(){
-  if(++ticks%30!==0) return;
-  if(!sesStart) sesStart=localISO();
-  const ts=new Date().toTimeString().slice(0,8);
-  for(const side of SIDES) for(const j of JOINTS){
-    const d=jData[side][j];
-    if(d.exercise!=='reposo'&&d.angle>0){
-      const m=META[d.exercise];
-      registro.push({timestamp:ts,lado:side,region:m.r,articulacion:j,ejercicio:d.exercise,angulo:Math.round(d.angle*100)/100});
-      const k=`${j}_${side}`;
-      movs[k][d.exercise]=Math.max(movs[k][d.exercise]||0,d.max);
+    app.connected = true;
+    app.buffer    = '';
+    setBLEUI('connected', device.name || BLE_DEVICE_NAME);
+    renderLivePanel();
+  } catch(e) {
+    console.error('[BLE]', e);
+    setBLEUI('disconnected');
+    if (!e.message?.includes('cancelled') && !e.message?.includes('chosen')) {
+      alert('Connection error:\n' + e.message);
     }
   }
 }
 
-// APACHE y SQLite API,  URL de tu servicio en Render 
-const API_URL='https://backend-d2fb.onrender.com/api/sesiones.php';
-// ROM_API_KEY generado en Render
-const API_KEY='-xK9mP3qL7nR2wT8v';
-const API_H={'X-API-Key':API_KEY};
-
-async function apiGet(path=''){
-  try{const r=await fetch(API_URL+path,{headers:API_H});if(!r.ok)return null;return r.json();}
-  catch(e){console.error('[ROM] GET'+path,e);return null;}
-}
-async function apiPost(body){
-  try{const r=await fetch(API_URL,{method:'POST',headers:{...API_H,'Content-Type':'text/plain'},body:JSON.stringify(body)});return r.ok;}
-  catch(e){console.error('[ROM] POST',e);return false;}
-}
-async function apiPatch(id,body){
-  try{const r=await fetch(`${API_URL}?id=${id}`,{method:'PATCH',headers:{...API_H,'Content-Type':'text/plain'},body:JSON.stringify(body)});return r.ok;}
-  catch(e){console.error('[ROM] PATCH',e);return false;}
-}
-async function apiDel(id){
-  try{const r=await fetch(`${API_URL}?id=${id}`,{method:'DELETE',headers:API_H});return r.ok;}
-  catch(e){console.error('[ROM] DELETE',e);return false;}
+function disconnectBLE() {
+  try {
+    if (app.bleDevice?.gatt?.connected) app.bleDevice.gatt.disconnect();
+  } catch{}
+  onBLEDisconnected();
 }
 
-// Apache HTTP Server, PHP, SQLite
-async function loadAll(){const d=await apiGet();return Array.isArray(d)?d:[];}
-async function nextId(){const d=await apiGet('?maxid=1');return d?String((d.maxId||0)+1):'1';}
-async function saveSession(){
-  const sid=await nextId(),now=localISO();
-  const maxMin={};
-  for(const side of SIDES) for(const j of JOINTS){
-    const d=jData[side][j];
-    maxMin[`${j}_${side}`]={max:Math.round(d.max*100)/100,min:d.min<180?Math.round(d.min*100)/100:0};
+function onBLEDisconnected() {
+  if (app.currentSid !== null) {
+    closeCurrentSession();
   }
-  const ses={id:sid,inicio:sesStart||now,fin:now,paciente:'',notas:'',tipo:'gonio_fullbody',
-    max_min:maxMin,movimientos_detectados:JSON.parse(JSON.stringify(movs)),registro:[...registro]};
-  const ok=await apiPost(ses);
-  if(!ok){toast('⚠ Error al guardar');return;}
-  registro=[];movs=mkMovs();sesStart=null;
-  const fl=document.getElementById('flash');
-  fl.classList.add('show');setTimeout(()=>fl.classList.remove('show'),300);
-  toast(`✓ Sesión #${sid} guardada`,true);renderSesList();
+  app.connected  = false;
+  app.liveEvents = [];
+  app.liveStats  = { ciclos:0, apneas:0, avgTi:'—', avgTe:'—', avgIe:'—', avgAp:null, maxAp:null, bpm:'—', rpmActivo:'—', rpmCiclo:'—', avgPausa:null };
+  setBLEUI('disconnected');
+  renderLivePanel();
+  renderSessionList();
 }
-function resetSession(){jData=mkState();registro=[];movs=mkMovs();sesStart=null;ticks=0;_ankleLastAng.derecho=0;_ankleLastAng.izquierdo=0;toast('🔄 Reset completo');}
-async function updateSes(id,p,n){await apiPatch(id,{paciente:p,notas:n});}
-async function deleteSes(id){await apiDel(id);renderSesList();toast('Sesión eliminada');}
-async function exportSes(id){
-  const all=await loadAll();
-  const s=all.find(x=>x.id===id);if(!s)return;
-  const name=s.paciente?`sesion_${s.id}_${s.paciente.replace(/\s+/g,'_')}.json`:`sesion_${s.id}.json`;
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([JSON.stringify(s,null,4)],{type:'application/json'}));
-  a.download=name;a.click();
+
+function onBLEData(event) {
+  const chunk = new TextDecoder('utf-8', { fatal: false }).decode(event.target.value);
+  app.buffer += chunk;
+  let nl;
+  while ((nl = app.buffer.indexOf('\n')) !== -1) {
+    const line = app.buffer.slice(0, nl).trim();
+    app.buffer  = app.buffer.slice(nl + 1);
+    if (line) processLine(line);
+  }
 }
-function importJSON(inp){
-  const f=inp.files[0];if(!f)return;
-  const r=new FileReader();
-  r.onload=async e=>{
-    try{
-      const d=JSON.parse(e.target.result);if(!d.id)throw 0;
-      const all=await loadAll();
-      if(all.find(s=>s.id===d.id)){toast('⚠ Sesión ya existe');return;}
-      const ok=await apiPost(d);
-      if(ok){renderSesList();toast('✓ Sesión importada',true);}else{toast('⚠ Error al importar');}
-    }catch{toast('⚠ Archivo inválido');}
+
+async function processLine(line) {
+  const parts = line.split(',');
+  const tipo = parts[0].trim().toUpperCase();
+
+  if (tipo === 'INICIO') {
+    if (app.currentSid !== null) await closeCurrentSession();
+    app.currentSid  = await createSession();
+    app.liveEvents  = [];
+    app.liveStats   = { ciclos:0, apneas:0, avgTi:'—', avgTe:'—', avgIe:'—', avgAp:null, maxAp:null, bpm:'—', rpmActivo:'—', rpmCiclo:'—', avgPausa:null };
+    renderLivePanel();
+    renderSessionList();
+    return;
+  }
+
+  // ── Nuevo formato: CICLO,ti_s,te_s,pausa_s,rpm_activo,rpm_ciclo,ie ──
+  if (tipo === 'CICLO') {
+    if (parts.length < 7) return;
+    const [, tiStr, teStr, pausaStr, rpmAStr, rpmCStr, ieStr] = parts;
+    const ti_s      = parseFloat(tiStr);
+    const te_s      = parseFloat(teStr);
+    const pausa_s   = parseFloat(pausaStr);
+    const rpm_activo= parseFloat(rpmAStr);
+    const rpm_ciclo = parseFloat(rpmCStr);
+    const ie        = parseFloat(ieStr);
+    if (isNaN(ti_s) || isNaN(te_s)) return;
+
+    if (app.currentSid === null) {
+      app.currentSid = await createSession();
+      app.liveEvents = [];
+      renderLivePanel();
+    }
+
+    const ts = new Date().toLocaleTimeString('en', { hour12: false });
+
+    // Save INHALA and EXHALA as separate events in DB (backward compat)
+    const evInhalaId = await DB.nextEventId();
+    const evInhala = { id: evInhalaId, sesion_id: app.currentSid, timestamp: ts,
+                       tipo: 'INHALA', valor_s: Math.round(ti_s*1000)/1000,
+                       ie_ratio: Math.round(ie*1000)/1000 };
+    await DB.addEvent(app.currentSid, evInhala);
+
+    const evExhalaId = await DB.nextEventId();
+    const evExhala = { id: evExhalaId, sesion_id: app.currentSid, timestamp: ts,
+                       tipo: 'EXHALA', valor_s: Math.round(te_s*1000)/1000,
+                       ie_ratio: Math.round(ie*1000)/1000 };
+    await DB.addEvent(app.currentSid, evExhala);
+
+    // Save cycle metadata (pause and RPMs) in a special event
+    // type CICLO_META so history can recalculate correct RPM
+    if (pausa_s > 0 || !isNaN(rpm_ciclo)) {
+      const evMetaId = await DB.nextEventId();
+      const evMeta = { id: evMetaId, sesion_id: app.currentSid, timestamp: ts,
+                       tipo: 'CICLO_META', valor_s: Math.round(pausa_s*1000)/1000,
+                       ie_ratio: Math.round(rpm_ciclo*100)/100 };
+      await DB.addEvent(app.currentSid, evMeta);
+    }
+
+    // Update session counters
+    const events = await DB.getEvents(app.currentSid);
+    const ciclos = events.filter(e=>e.tipo==='INHALA').length;
+    const apneas = events.filter(e=>e.tipo.startsWith('APNEA')).length;
+    await DB.updateSession(app.currentSid, { total_ciclos: ciclos, total_apneas: apneas });
+
+    // Update live state with RPMs calculated by ESP
+    app.liveEvents.unshift(evInhala);
+    app.liveEvents.unshift(evExhala);
+    if (app.liveEvents.length > 100) app.liveEvents.splice(100);
+    recomputeLiveStats(events, rpm_activo, rpm_ciclo);
+
+    updateLiveUI();
+    if (document.getElementById('panel-sessions').classList.contains('active')) renderSessionList();
+    return;
+  }
+
+  // ── Formato legacy / apneas: TIPO,valor_s,ie_ratio ──
+  if (!['APNEA_TERAP','APNEA_PATOL'].includes(tipo)) return;
+  if (parts.length < 3) return;
+
+  const valor_s = parseFloat(parts[1]);
+  const ie      = parseFloat(parts[2]);
+  if (isNaN(valor_s)) return;
+
+  if (app.currentSid === null) {
+    app.currentSid = await createSession();
+    app.liveEvents = [];
+    renderLivePanel();
+  }
+
+  const ts = new Date().toLocaleTimeString('en', { hour12: false });
+  const evId = await DB.nextEventId();
+  const ev = {
+    id:        evId,
+    sesion_id: app.currentSid,
+    timestamp: ts,
+    tipo,
+    valor_s:   Math.round(valor_s * 1000) / 1000,
+    ie_ratio:  isNaN(ie) ? 0 : Math.round(ie * 1000) / 1000
   };
-  r.readAsText(f);inp.value='';
+
+  await DB.addEvent(app.currentSid, ev);
+
+  const events = await DB.getEvents(app.currentSid);
+  const ciclos = events.filter(e=>e.tipo==='INHALA').length;
+  const apneas = events.filter(e=>e.tipo.startsWith('APNEA')).length;
+  await DB.updateSession(app.currentSid, { total_ciclos: ciclos, total_apneas: apneas });
+
+  app.liveEvents.unshift(ev);
+  if (app.liveEvents.length > 100) app.liveEvents.pop();
+  recomputeLiveStats(events, null, null);
+
+  if (tipo === 'APNEA_PATOL') triggerApneaAlert();
+
+  updateLiveUI();
+  if (document.getElementById('panel-sessions').classList.contains('active')) renderSessionList();
 }
 
-// MEDIAPIPE 
-const vid=document.getElementById('vid');
-const cvs=document.getElementById('cvs');
-const ctx=cvs.getContext('2d');
-let pose,cameraOn=false,poseReady=false,facingMode='user';
-
-function onResults(res){
-  ctx.clearRect(0,0,cvs.width,cvs.height);
-  const lm=res.poseLandmarks;
-  if(lm&&lm.length>0){
-    setStatus('on','Detectando');
-    ctx.save();
-    if(facingMode==='user'){ctx.translate(cvs.width,0);ctx.scale(-1,1);}
-    if(window.drawConnectors&&window.POSE_CONNECTIONS){
-      drawConnectors(ctx,lm,POSE_CONNECTIONS,{color:'rgba(30,60,200,0.85)',lineWidth:3});
-      drawLandmarks(ctx,lm,{color:'#00e5cc',fillColor:'#00e5cc',lineWidth:1,radius:5});
-    }
-    ctx.restore();
-    const L={sh:11,el:13,wr:15,hip:23,kn:25,an:27,he:29};
-    const R={sh:12,el:14,wr:16,hip:24,kn:26,an:28,he:30};
-    const map={
-      derecho:  {sh:lm[R.sh],el:lm[R.el],wr:lm[R.wr],hip:lm[R.hip],kn:lm[R.kn],an:lm[R.an],he:lm[R.he]},
-      izquierdo:{sh:lm[L.sh],el:lm[L.el],wr:lm[L.wr],hip:lm[L.hip],kn:lm[L.kn],an:lm[L.an],he:lm[L.he]},
-    };
-    for(const side of SIDES){
-      const {sh,el,wr,hip,kn,an,he}=map[side];
-      const vs=Math.min(sh.visibility||0,el.visibility||0,wr.visibility||0);
-      const vi=Math.min(hip.visibility||0,kn.visibility||0,an.visibility||0);
-      if(vs>=VIS){
-        const[exS,aS]=analyzeShoulder(sh,el,hip);updateJoint(side,'hombro',exS||'reposo',aS);
-        const[exE,aE]=analyzeElbow(sh,el,wr);    updateJoint(side,'codo',  exE||'reposo',aE);
-      }else{updateJoint(side,'hombro','reposo',0);updateJoint(side,'codo','reposo',0);}
-      if(vi>=VIS){
-        const[exH,aH]=analyzeHip(sh,hip,kn,side);updateJoint(side,'cadera', exH||'reposo',aH);
-        const[exK,aK]=analyzeKnee(hip,kn,an);    updateJoint(side,'rodilla',exK||'reposo',aK);
-        const[exA,aA]=analyzeAnkle(kn,an,side);  updateJoint(side,'tobillo',exA||'reposo',aA);
-      }else{updateJoint(side,'cadera','reposo',0);updateJoint(side,'rodilla','reposo',0);updateJoint(side,'tobillo','reposo',0);}
-    }
-    tick();renderAP();
-  }else{
-    setStatus('warn','Sin detectar');
-    ctx.fillStyle='rgba(255,68,102,0.9)';
-    ctx.font='bold 14px JetBrains Mono,monospace';
-    ctx.textAlign='center';
-    ctx.fillText('⚠ NO SE DETECTA PERSONA',cvs.width/2,34);
+function updateLiveUI() {
+  const statsEl  = document.getElementById('liveStats');
+  const barsEl   = document.getElementById('liveBars');
+  const streamEl = document.getElementById('liveStream');
+  const cntEl    = document.getElementById('liveEvBadge');
+  if (statsEl && barsEl && streamEl) {
+    statsEl.innerHTML  = buildStatsHTML(app.liveStats);
+    barsEl.innerHTML   = buildBarsHTML(app.liveStats);
+    streamEl.innerHTML = buildStreamHTML();
+    if (cntEl) cntEl.textContent = app.liveEvents.length;
+  } else {
+    renderLivePanel();
   }
-}
-async function initPose(){
-  ldMsg('Cargando modelo de pose…');
-  pose=new Pose({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5/${f}`});
-  pose.setOptions({modelComplexity:1,smoothLandmarks:true,enableSegmentation:false,
-    smoothSegmentation:false,minDetectionConfidence:0.5,minTrackingConfidence:0.5});
-  pose.onResults(onResults);
-  ldMsg('Inicializando modelo WASM…');
-  await pose.initialize();
-  ldMsg('Activando cámara…');
-  await startCam();
-}
-async function startCam(mode){
-  if(mode) facingMode=mode;
-  let stream=null;
-  for(const c of [{video:{facingMode:facingMode,width:{ideal:640},height:{ideal:480}}},{video:true}]){
-    try{stream=await navigator.mediaDevices.getUserMedia(c);break;}catch(e){}
-  }
-  if(!stream) throw new Error('No se pudo acceder a la cámara');
-  vid.srcObject=stream;
-  await new Promise(res=>{vid.onloadedmetadata=res;});
-  await vid.play();
-  // Espejo cámara frontal
-  vid.style.transform=facingMode==='user'?'scaleX(-1)':'scaleX(1)';
-  cameraOn=true;poseReady=true;
-  document.getElementById('ld').style.opacity='0';
-  setTimeout(()=>document.getElementById('ld').style.display='none',400);
-  setStatus('warn','Buscando…');
-  loop();
-}
-async function switchCam(){
-  const btn=document.getElementById('fab-flip');
-  if(btn) btn.style.pointerEvents='none';
-  cameraOn=false;
-  if(vid.srcObject) vid.srcObject.getTracks().forEach(t=>t.stop());
-  const newMode=facingMode==='user'?'environment':'user';
-  setStatus('warn','Cambiando cámara…');
-  try{
-    await startCam(newMode);
-    toast(newMode==='environment'?'📷 Cámara trasera':'🤳 Cámara frontal',true);
-  }catch(e){
-    // volver a la cámara anterior si falla
-    cameraOn=true;
-    toast('⚠ No se pudo cambiar de cámara');
-    await startCam(facingMode==='user'?'environment':'user');
-  }
-  if(btn) btn.style.pointerEvents='';
-}
-async function loop(){
-  if(!cameraOn) return;
-  if(vid.readyState>=2){
-    const w=vid.videoWidth||640,h=vid.videoHeight||480;
-    if(cvs.width!==w||cvs.height!==h){cvs.width=w;cvs.height=h;}
-    try{await pose.send({image:vid});}catch(e){}
-  }
-  requestAnimationFrame(loop);
 }
 
-//UI:PANEL DE ÁNGULOS
-function renderAP(){
-  document.getElementById('ap-sup').innerHTML=J_SUP.flatMap(j=>SIDES.map(s=>apCard(j,s))).join('');
-  document.getElementById('ap-inf').innerHTML=J_INF.flatMap(j=>SIDES.map(s=>apCard(j,s))).join('');
+// ══════════════════════════════════════════════════
+//  SESSION MANAGEMENT
+// ══════════════════════════════════════════════════
+async function createSession() {
+  const id  = await DB.nextSessionId();
+  const now = new Date();
+  const ts  = now.toLocaleDateString('en',{day:'2-digit',month:'2-digit',year:'numeric'}) + ' '
+             + now.toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit'});
+  const ses = { id, paciente:'', notas:'', inicio:ts, fin:null, total_ciclos:0, total_apneas:0 };
+  await DB.createSession(ses);
+  cache.sessions = null;
+  return id;
 }
-function apCard(j,side){
-  const d=jData[side][j],col=COLS[j],active=d.exercise!=='reposo';
-  return `<div class="apc">
-    <div class="apc-lbl">${j.toUpperCase()}·${side==='derecho'?'D':'I'}</div>
-    <div class="apc-val" style="color:${active?col:'var(--txt3)'}">${active?Math.round(d.angle):0}<span>°</span></div>
-    <div class="apc-ex"  style="color:${active?col:'var(--txt3)'}">${active?(META[d.exercise]?.n||d.exercise):'—'}</div>
-    <div class="apc-max">MAX ${Math.round(d.max)}°</div>
+
+async function closeCurrentSession() {
+  const sid = app.currentSid;
+  if (sid === null) return;
+  const now = new Date();
+  const ts  = now.toLocaleDateString('en',{day:'2-digit',month:'2-digit',year:'numeric'}) + ' '
+             + now.toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit'});
+  const evs = await DB.getEvents(sid);
+  const ciclos = evs.filter(e => e.tipo === 'INHALA').length;
+  const apneas = evs.filter(e => e.tipo.startsWith('APNEA')).length;
+  await DB.updateSession(sid, { fin: ts, total_ciclos: ciclos, total_apneas: apneas });
+  app.currentSid = null;
+  renderSessionList();
+}
+
+function recomputeLiveStats(events, rpmActivoEsp, rpmCicloEsp) {
+  const inhales  = events.filter(e => e.tipo === 'INHALA');
+  const exhales  = events.filter(e => e.tipo === 'EXHALA');
+  const apneas   = events.filter(e => e.tipo.startsWith('APNEA'));
+  const metas    = events.filter(e => e.tipo === 'CICLO_META');
+
+  const avg = arr => arr.length ? arr.reduce((s,e)=>s+e.valor_s,0)/arr.length : 0;
+  const max = arr => arr.length ? Math.max(...arr.map(e=>e.valor_s)) : 0;
+
+  const avgTi = avg(inhales);
+  const avgTe = avg(exhales);
+  const avgAp = avg(apneas);
+  const maxAp = max(apneas);
+
+  const ieVals = events.filter(e=>e.ie_ratio>0 && e.tipo==='INHALA').map(e=>e.ie_ratio);
+  const avgIe  = ieVals.length ? ieVals.reduce((s,v)=>s+v,0)/ieVals.length : 0;
+
+  // RPM: use most recent values sent by ESP (source of truth)
+  // If not yet available (first cycle), show '—'
+  let rpmActivo = '—', rpmCiclo = '—';
+  if (rpmActivoEsp != null && !isNaN(rpmActivoEsp)) {
+    rpmActivo = rpmActivoEsp.toFixed(1);
+  } else if (app.liveStats.rpmActivo && app.liveStats.rpmActivo !== '—') {
+    rpmActivo = app.liveStats.rpmActivo; // keep last value
+  }
+  if (rpmCicloEsp != null && !isNaN(rpmCicloEsp)) {
+    rpmCiclo = rpmCicloEsp.toFixed(1);
+  } else if (app.liveStats.rpmCiclo && app.liveStats.rpmCiclo !== '—') {
+    rpmCiclo = app.liveStats.rpmCiclo;
+  }
+
+  // Average pause (from CICLO_META: valor_s = pausa_s)
+  const avgPausa = metas.length ? avg(metas) : null;
+
+  // bpm legacy = rpmCiclo (for backward compat)
+  const bpm = rpmCiclo;
+
+  app.liveStats = {
+    ciclos:    inhales.length,
+    apneas:    apneas.length,
+    avgTi:     avgTi ? avgTi.toFixed(2) : '—',
+    avgTe:     avgTe ? avgTe.toFixed(2) : '—',
+    avgIe:     avgIe ? avgIe.toFixed(2) : '—',
+    avgAp:     avgAp ? avgAp.toFixed(1) : null,
+    maxAp:     maxAp ? maxAp.toFixed(1) : null,
+    avgPausa:  avgPausa ? avgPausa.toFixed(1) : null,
+    rpmActivo,
+    rpmCiclo,
+    bpm,
+  };
+}
+
+function computeStatsFromEvents(events) {
+  const inhales = events.filter(e=>e.tipo==='INHALA');
+  const exhales = events.filter(e=>e.tipo==='EXHALA');
+  const apneas  = events.filter(e=>e.tipo.startsWith('APNEA'));
+  const metas   = events.filter(e=>e.tipo==='CICLO_META');
+
+  const avg = arr => arr.length ? arr.reduce((s,e)=>s+e.valor_s,0)/arr.length : null;
+  const max = arr => arr.length ? Math.max(...arr.map(e=>e.valor_s)) : null;
+  const ieVals = inhales.filter(e=>e.ie_ratio>0).map(e=>e.ie_ratio);
+
+  // Full cycle RPM: average of rpm_ciclo stored in ie_ratio of CICLO_META
+  const rpmCicloVals = metas.filter(e=>e.ie_ratio>0).map(e=>e.ie_ratio);
+  const avg_rpm_ciclo = rpmCicloVals.length
+    ? +(rpmCicloVals.reduce((s,v)=>s+v,0)/rpmCicloVals.length).toFixed(1)
+    : null;
+
+  // Active ventilatory RPM: 60/(avgTi+avgTe) — breathing time only
+  const avgTi = avg(inhales);
+  const avgTe = avg(exhales);
+  const avg_rpm_activo = (avgTi && avgTe)
+    ? +(60/(avgTi+avgTe)).toFixed(1)
+    : null;
+
+  // Average pause
+  const avg_pausa = avg(metas) != null ? +avg(metas).toFixed(1) : null;
+
+  return {
+    avg_ti:       avgTi != null ? +avgTi.toFixed(2) : null,
+    avg_te:       avgTe != null ? +avgTe.toFixed(2) : null,
+    avg_ap:       avg(apneas) != null ? +avg(apneas).toFixed(1) : null,
+    max_ap:       max(apneas) != null ? +max(apneas).toFixed(1) : null,
+    avg_ie:       ieVals.length ? +(ieVals.reduce((s,v)=>s+v,0)/ieVals.length).toFixed(2) : null,
+    n_terap:      events.filter(e=>e.tipo==='APNEA_TERAP').length,
+    n_patol:      events.filter(e=>e.tipo==='APNEA_PATOL').length,
+    avg_rpm_ciclo,
+    avg_rpm_activo,
+    avg_pausa,
+  };
+}
+
+// ══════════════════════════════════════════════════
+//  EXERCISE DEFINITIONS AND CLINICAL RANGES
+// ══════════════════════════════════════════════════
+const EJERCICIOS = {
+  1: {
+    nombre: 'Controlled Apnea in Sitting Position',
+    objetivo: 'Improve tolerance to hypercapnia and ventilatory control',
+    rangos: {
+      ti:    { min:1.5, max:4.0,  label:'Deep Inhale',           unidad:'s' },
+      te:    { min:3.5, max:5.0,  label:'Slow Exhale ~4s',          unidad:'s' },
+      apnea: { min:3.0, max:8.0,  label:'Target Apnea',            unidad:'s' },
+      rpm:   null,
+      ie:    null,
+    },
+    nota: 'RPM not applicable: apneas extend the cycle by design.'
+  },
+  2: {
+    nombre: 'Directed Diaphragmatic Breathing',
+    objetivo: 'Basal recruitment and diaphragmatic pattern',
+    rangos: {
+      ti:    { min:2.5, max:5.0,  label:'Diaphragmatic Inhale',      unidad:'s' },
+      te:    { min:3.5, max:7.0,  label:'Pursed-lip Exhale',   unidad:'s' },
+      apnea: null,
+      rpm:   { min:6.0, max:10.0, label:'Slow Cadence',            unidad:'rpm' },
+      ie:    { min:0.5, max:1.2,  label:'I:E Ratio',                  unidad:'' },
+    },
+    nota: 'RPM >12 indicates hurried breathing.'
+  },
+  3: {
+    nombre: 'Intermittent Apnea with Postural Control',
+    objetivo: 'Train inspiratory muscles and exertion tolerance',
+    rangos: {
+      ti:    { min:2.0, max:5.0,  label:'Deep Inhale',           unidad:'s' },
+      te:    { min:2.0, max:5.0,  label:'Active Exhale',             unidad:'s' },
+      apnea: { min:6.0, max:8.0,  label:'Target Apnea',            unidad:'s' },
+      rpm:   null,
+      ie:    null,
+    },
+    nota: 'Longer apnea than Ex. 1. Observe postural tolerance.'
+  },
+  4: {
+    nombre: 'Fractional Inspiratory Breathing',
+    objetivo: 'Improve inspiratory capacity and respiratory motor control',
+    rangos: {
+      ti:    { min:3.0, max:7.0,  label:'Fractional Inhale (3 steps)',   unidad:'s' },
+      te:    { min:3.0, max:6.0,  label:'Continuous Exhale',           unidad:'s' },
+      apnea: null,
+      rpm:   { min:5.0, max:9.0,  label:'Cadence',                  unidad:'rpm' },
+      ie:    null,
+    },
+    nota: 'Long Ti due to 3 fractional steps. Normal >Ex. 2.'
+  },
+  5: {
+    nombre: 'Fractional Expiratory Breathing',
+    objetivo: 'Promote lung emptying (air trapping)',
+    rangos: {
+      ti:    { min:2.0, max:4.5,  label:'Deep Inhale',           unidad:'s' },
+      te:    { min:4.0, max:9.0,  label:'Phased Exhale',           unidad:'s' },
+      apnea: null,
+      rpm:   { min:4.0, max:8.0,  label:'Cadence',                  unidad:'rpm' },
+      ie:    { min:1.2, max:3.5,  label:'I:E Ratio (Te > Ti)',        unidad:'' },
+    },
+    nota: 'Elevated Te is positive. I:E >1 is the therapeutic goal.'
+  },
+  6: {
+    nombre: 'Apnea with Glottal Contraction',
+    objetivo: 'Train inspiratory muscles and glottal coordination',
+    rangos: {
+      ti:    { min:1.5, max:4.0,  label:'Inhale',                    unidad:'s' },
+      te:    { min:2.5, max:5.0,  label:'Controlled Exhale',         unidad:'s' },
+      apnea: { min:6.0, max:8.0,  label:'Glottal Apnea',             unidad:'s' },
+      rpm:   null,
+      ie:    null,
+    },
+    nota: 'Glottal closure apnea is the key parameter.'
+  },
+  7: {
+    nombre: 'Expiratory Resistance Breathing',
+    objetivo: 'Strengthen expiratory muscles',
+    rangos: {
+      ti:    { min:1.5, max:3.5,  label:'Nasal Inhale',          unidad:'s' },
+      te:    { min:4.0, max:10.0, label:'Exhale Against Resistance', unidad:'s' },
+      apnea: null,
+      rpm:   { min:4.0, max:8.0,  label:'Cadence',                  unidad:'rpm' },
+      ie:    { min:1.5, max:5.0,  label:'I:E Ratio (Long Te)',       unidad:'' },
+    },
+    nota: 'Long Te is the goal. In COPD it can reach 10s or more.'
+  },
+  8: {
+    nombre: 'Alternating Apnea with Rhythmic Breathing',
+    objetivo: 'Train respiratory tolerance and vital capacity',
+    rangos: {
+      ti:    { min:2.0, max:5.0,  label:'Deep Inhale',           unidad:'s' },
+      te:    { min:2.0, max:5.0,  label:'Controlled Exhale',         unidad:'s' },
+      apnea: { min:4.0, max:10.0, label:'Maximum Voluntary Apnea',   unidad:'s' },
+      rpm:   null,
+      ie:    null,
+    },
+    nota: 'Maximum voluntary apnea. Progression: reduce prior breaths.'
+  },
+};
+
+function evalRango(val, rango) {
+  if (!rango || val == null) return '';
+  const { min, max } = rango;
+  if (val >= min && val <= max) return 'ok';
+  const margen = (max - min) * 0.20;
+  if (val >= min - margen && val <= max + margen) return 'warn';
+  return 'bad';
+}
+
+function parseSessionMeta(s) {
+  try {
+    if (s.notas && s.notas.startsWith('{')) return JSON.parse(s.notas);
+  } catch(e) {}
+  return { ej: 0, notas: s.notas || '' };
+}
+
+function serializeSessionMeta(ej, notas) {
+  if (!ej || ej === '0') return notas;
+  return JSON.stringify({ ej: parseInt(ej), notas });
+}
+
+// ══════════════════════════════════════════════════
+//  BLE UI HELPERS
+// ══════════════════════════════════════════════════
+function setBLEUI(status, name) {
+  const btn = document.getElementById('bleBtn');
+  const dot = document.getElementById('dot');
+  const txt = document.getElementById('bleStatus');
+  btn.className = 'ble-btn';
+  dot.className = 'dot';
+  if (status === 'connecting') {
+    btn.classList.add('connecting'); dot.classList.add('warn');
+    txt.textContent = 'Connecting...';
+  } else if (status === 'connected') {
+    btn.classList.add('connected'); dot.classList.add('on');
+    txt.textContent = name || 'Connected';
+  } else {
+    txt.textContent = 'Connect';
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  TAB NAVIGATION
+// ══════════════════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if (name === 'live')     renderLivePanel();
+  if (name === 'sessions') renderSessionList();
+}
+
+// ══════════════════════════════════════════════════
+//  SESSIONS LIST
+// ══════════════════════════════════════════════════
+async function renderSessionList() {
+  const sessions = await DB.getSessions();
+  const q = app.searchQuery.toLowerCase();
+  const list = q ? sessions.filter(s=>(s.paciente||'').toLowerCase().includes(q)) : sessions;
+
+  document.getElementById('sesCount').textContent =
+    list.length + list.length !== 1 ? ' sessions' : ' session';
+
+  const el = document.getElementById('sesList');
+  if (!list.length) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🫁</div>
+        <div class="empty-title">${q ? 'No results' : 'No sessions yet'}</div>
+        <div class="empty-sub">${q ? 'Try a different name' : 'Connect the ESP32 to<br>start monitoring'}</div>
+      </div>`;
+    return;
+  }
+  el.innerHTML = list.map(s => {
+    const meta = parseSessionMeta(s);
+    const ejNum = meta.ej || 0;
+    const ejDef = EJERCICIOS[ejNum];
+    return `
+    <div class="si-item" onclick="openSheet(${s.id})">
+      <div class="si-top">
+        <span class="si-id">#${s.id}</span>
+        ${!s.fin ? '<span class="pill live"><span class="pd"></span>LIVE</span>' : ''}
+        ${ejDef ? `<span class="pill ej">Ej.${ejNum}</span>` : ''}
+        ${s.total_apneas > 0 ? `<span class="pill apnea">⚠ ${s.total_apneas}</span>` : ''}
+      </div>
+      <div class="si-name ${!s.paciente?'empty':''}">${s.paciente||'Unassigned'}</div>
+      <div class="si-meta">${s.inicio||'—'} · ${s.total_ciclos} ciclos${ejDef?' · '+ejDef.nombre.split(' ').slice(0,3).join(' ')+'…':''}</div>
+    </div>
+  `}).join('');
+}
+
+let searchTimer;
+function onSearch(v) {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { app.searchQuery = v; renderSessionList(); }, 250);
+}
+
+// ══════════════════════════════════════════════════
+//  LIVE PANEL
+// ══════════════════════════════════════════════════
+async function renderLivePanel() {
+  const el = document.getElementById('livePanel');
+  if (!el) return;
+
+  if (!app.connected && app.currentSid === null) {
+    el.innerHTML = `
+      <div class="connect-card">
+        <div class="cc-icon">📡</div>
+        <div class="cc-title">No device</div>
+        <div class="cc-sub">Connect the ESP32 <strong style="color:#0d1117">"RespMonitor"</strong><br>to start monitoring in real time</div>
+        <button class="big-btn cyan" onclick="connectBLE()">Connect via BLE</button>
+      </div>`;
+    return;
+  }
+
+  if (app.connected && app.currentSid === null) {
+    el.innerHTML = `
+      <div class="connect-card">
+        <div class="cc-icon" style="animation:blink 1.5s infinite">🫁</div>
+        <div class="cc-title" style="color:#0d1117">Connected</div>
+        <div class="cc-sub">Waiting for the ESP32 to finish<br>calibration (~8 seconds)...</div>
+        <button class="big-btn red" onclick="disconnectBLE()">Disconnect</button>
+      </div>`;
+    return;
+  }
+
+  const sessions = await DB.getSessions();
+  const ses = sessions.find(s => s.id === app.currentSid);
+  const s = app.liveStats;
+
+  el.innerHTML = `
+    <div class="live-hd">
+      <div style="flex:1;min-width:0">
+        <div class="live-ses-tag">SES #${app.currentSid} · ${app.connected?'<span style="color:#0d5c6e;font-weight:700">LIVE</span>':'FINISHED'}</div>
+        <div class="live-name ${ses?.paciente?'':'empty'}">${ses?.paciente||'No patient assigned'}</div>
+      </div>
+      ${app.connected ? `<button class="big-btn red" style="font-size:11px;padding:7px 12px;flex-shrink:0" onclick="disconnectBLE()">Disconnect</button>` : ''}
+    </div>
+
+    <div class="stats-grid" id="liveStats">
+      ${buildStatsHTML(s)}
+    </div>
+
+    <div class="section">
+      <div class="sechd"><div class="sectitle">Time Distribution</div></div>
+      <div id="liveBars">${buildBarsHTML(s)}</div>
+    </div>
+
+    <div class="section">
+      <div class="sechd">
+        <div class="sectitle">Latest Events</div>
+        <div class="badge c" id="liveEvBadge">${app.liveEvents.length}</div>
+      </div>
+      <div class="ev-stream" id="liveStream">${buildStreamHTML()}</div>
+    </div>
+  `;
+}
+
+function buildStatsHTML(s) {
+  // Color RPM by clinical ranges
+  const rpmColor = v => {
+    const n = parseFloat(v);
+    if (isNaN(n)) return '';
+    if (n < 10 || n > 28) return 'r';   // fuera de rango → rojo
+    if (n > 20) return 'b';             // zona de alerta → azul
+    return 'c';                         // normal → cyan
+  };
+  return `
+    <div class="stat"><div class="sl">Cycles</div><div class="sv c">${s.ciclos||0}</div><div class="su">completed</div></div>
+    <div class="stat"><div class="sl">Active RPM</div><div class="sv ${rpmColor(s.rpmActivo)}">${s.rpmActivo||'—'}</div><div class="su">no pauses</div></div>
+    <div class="stat"><div class="sl">Apneas</div><div class="sv ${(s.apneas||0)>0?'r':''}">${s.apneas||0}</div><div class="su">${s.maxAp?'max '+s.maxAp+'s':''}&nbsp;</div></div>
+    <div class="stat"><div class="sl">T. Inhale</div><div class="sv">${s.avgTi||'—'}</div><div class="su">avg sec</div></div>
+    <div class="stat"><div class="sl">T. Exhale</div><div class="sv c">${s.avgTe||'—'}</div><div class="su">avg sec</div></div>
+    <div class="stat"><div class="sl">I:E Ratio</div><div class="sv">${s.avgIe&&s.avgIe!=='—'?'1:'+s.avgIe:'—'}</div><div class="su">&nbsp;</div></div>
+  `;
+}
+
+function buildBarsHTML(s) {
+  const ti = parseFloat(s.avgTi) || 0;
+  const te = parseFloat(s.avgTe) || 0;
+  const ap = parseFloat(s.avgAp) || 0;
+  const pa = parseFloat(s.avgPausa) || 0;
+  if (!ti && !te) return '<div class="no-apnea">Waiting for data...</div>';
+  const mx = Math.max(ti, te, ap, pa, 0.1);
+  const pct = v => ((v/mx)*100).toFixed(1)+'%';
+  return `<div class="bars">
+    ${ti?`<div class="br"><div class="bl">Inhalation</div><div class="bt"><div class="bf i" style="width:${pct(ti)}"></div></div><div class="bv">${ti} s</div></div>`:''}
+    ${te?`<div class="br"><div class="bl">Exhalation</div><div class="bt"><div class="bf e" style="width:${pct(te)}"></div></div><div class="bv">${te} s</div></div>`:''}
+    ${pa?`<div class="br"><div class="bl">Avg Pause</div><div class="bt"><div class="bf" style="width:${pct(pa)};background:linear-gradient(90deg,#4a3a90,#8b7fd4)"></div></div><div class="bv">${pa} s</div></div>`:''}
+    ${ap?`<div class="br"><div class="bl">Avg Apnea</div><div class="bt"><div class="bf a" style="width:${pct(ap)}"></div></div><div class="bv">${ap} s</div></div>`:'<div class="no-apnea">No apneas ✓</div>'}
   </div>`;
 }
 
-//UI:SESIONES 
-let qFilter='';
-function filterSes(v){qFilter=v;renderSesList();}
-async function renderSesList(){
-  const all=await loadAll(),q=qFilter.toLowerCase();
-  const list=q?all.filter(s=>(s.paciente||'').toLowerCase().includes(q)||s.id.includes(q)):all;
-  document.getElementById('ses-count').textContent=`${list.length} sesión${list.length!==1?'es':''}`;
-  const el=document.getElementById('ses-list');
-  if(!list.length){
-    el.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-txt">${q?`Sin resultados para "${q}"`:'No hay sesiones guardadas.'}</div></div>`;
-    return;
+function buildStreamHTML() {
+  if (!app.liveEvents.length) {
+    return '<div style="padding:20px;text-align:center;font-family:var(--mono);font-size:10px;color:#2d3748">No events yet</div>';
   }
-  el.innerHTML=list.map(s=>`
-    <div class="si" onclick="openDet('${s.id}')">
-      <div class="si-top"><span class="si-id">Sesión #${s.id}</span><span class="si-arr">›</span></div>
-      <div class="si-name ${!s.paciente?'empty':''}">${s.paciente||'Sin paciente asignado'}</div>
-      <div class="si-date">${(s.inicio||'—').slice(0,16)}</div>
-    </div>`).join('');
+  return app.liveEvents.slice(0, 30).map(e => `
+    <div class="ev-row">
+      <span class="tag ${e.tipo.toLowerCase()}">${
+        e.tipo==='APNEA_TERAP'?'⏸ THERAP':
+        e.tipo==='APNEA_PATOL'?'🚨 PATOL':e.tipo
+      }</span>
+      <span class="ev-ts">${e.timestamp}</span>
+      <span class="ev-val">${e.valor_s.toFixed(2)}<span style="font-size:9px;color:#2d3748"> s</span></span>
+    </div>
+  `).join('');
 }
 
-//UI: DETALLE
-let detId=null,formOpen=false;
-async function openDet(id){detId=id;formOpen=false;document.getElementById('det-title').textContent=`Sesión #${id}`;await renderDet();goScreen('det');}
-async function renderDet(){
-  const s=(await loadAll()).find(x=>x.id===detId);if(!s)return;
-  function jCard(j,side){
-    const k=`${j}_${side}`,d=s.max_min?.[k]||{max:0,min:0},col=COLS[j];
-    const entries=Object.entries(s.movimientos_detectados?.[k]||{});
-    return `<div class="jcard">
-      <div class="jcard-ttl"><span class="dot2" style="background:${col}"></span>${j.toUpperCase()} · ${side==='derecho'?'DER.':'IZQ.'}</div>
-      <div class="jbody">
-        <div><div class="jval-lbl">Máximo</div><div class="jval-num" style="color:${col}">${(d.max||0).toFixed(0)}</div><div class="jval-unit">grados</div></div>
-        <div><div class="jval-lbl">Mínimo act.</div><div class="jval-num">${d.min>0?d.min.toFixed(0):'—'}</div><div class="jval-unit">grados</div></div>
-      </div>
-      ${entries.length?`<div class="divider"></div>${entries.map(([ex,a])=>`<div class="mv-row"><div class="mv-name">${ex.replace(/_/g,' ')}</div><div class="mv-ang" style="color:${col}">${parseFloat(a).toFixed(0)}°</div></div>`).join('')}`:''}
+// ══════════════════════════════════════════════════
+//  APNEA ALERT
+// ══════════════════════════════════════════════════
+let apneaTimer;
+function triggerApneaAlert() {
+  const el = document.getElementById('apneaToast');
+  el.style.display = 'block';
+  clearTimeout(apneaTimer);
+  apneaTimer = setTimeout(() => { el.style.display = 'none'; }, 6000);
+  if (navigator.vibrate) navigator.vibrate([400, 150, 400, 150, 400]);
+}
+
+// ══════════════════════════════════════════════════
+//  SESSION DETAIL SHEET
+// ══════════════════════════════════════════════════
+let currentSheetSid = null;
+let assignOpen = false;
+
+function openSheet(sid) {
+  currentSheetSid = sid;
+  assignOpen = false;
+  const overlay = document.getElementById('sheetOverlay');
+  overlay.classList.add('open');
+  renderSheetContent(sid);
+  requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('visible')));
+}
+
+function closeSheet() {
+  const overlay = document.getElementById('sheetOverlay');
+  overlay.classList.remove('visible');
+  setTimeout(() => { overlay.classList.remove('open'); currentSheetSid = null; }, 280);
+}
+
+function onOverlayClick(e) {
+  if (e.target === document.getElementById('sheetOverlay')) closeSheet();
+}
+
+async function renderSheetContent(sid) {
+  const sessions = await DB.getSessions();
+  const s = sessions.find(s => s.id === sid);
+  if (!s) return;
+  const events = await DB.getEvents(sid);
+  const st = computeStatsFromEvents(events);
+  const ciclos = events.filter(e=>e.tipo==='INHALA').length || s.total_ciclos;
+  const nAp = st.n_terap + st.n_patol;
+  const mx  = Math.max(st.avg_ti||0, st.avg_te||0, st.avg_ap||0, st.avg_pausa||0, 0.1);
+  const pct = v => ((v||0)/mx*100).toFixed(1)+'%';
+
+  // Read exercise and notes from metadata
+  const meta = parseSessionMeta(s);
+  const ejNum = meta.ej || 0;
+  const ejDef = EJERCICIOS[ejNum] || null;
+  const notasTexto = meta.notas || '';
+
+  // Generate selector options with current exercise selected
+  const ejOpciones = `
+    <option value="0" ${!ejNum?'selected':''}>— No exercise assigned —</option>
+    ${Object.entries(EJERCICIOS).filter(([k])=>k!='0').map(([k,v])=>
+      `<option value="${k}" ${ejNum==k?'selected':''}>${k}. ${v.nombre}</option>`
+    ).join('')}
+  `;
+
+  // Build metrics with clinical traffic light
+  function statCard(label, val, rango, unidad, sub) {
+    const estado = ejDef ? evalRango(val, rango) : '';
+    const valStr = val != null ? val : '—';
+    const rangoStr = rango && ejDef
+      ? `<div class="rango ${estado}">${rango.min}–${rango.max} ${rango.unidad||unidad}</div>`
+      : `<div class="su">${sub||'&nbsp;'}</div>`;
+    return `<div class="stat ${estado}">
+      <div class="sl">${label}</div>
+      <div class="sv ${estado}">${valStr}</div>
+      ${rangoStr}
     </div>`;
   }
-  const regs=s.registro||[];
-  document.getElementById('det-body').innerHTML=`
-    <div class="shd-card">
-      <div class="snum"><span class="snum-l">SES</span><span class="snum-v">#${s.id}</span></div>
-      <div class="sinfo">
-        <div class="sname ${!s.paciente?'empty':''}">${s.paciente||'Sin paciente asignado'}</div>
-        <div class="sdates">${(s.inicio||'—').slice(0,16)}${s.fin?' → '+(s.fin||'').slice(11,16):''}</div>
-        ${s.notas?`<div class="snotes">${s.notas}</div>`:''}
+
+  // RPM: if exercise has RPM as relevant metric, show with traffic light
+  // If not (ex. 1, 3, 6, 8), show with explanatory note
+  const rpmVal   = st.avg_rpm_ciclo ?? st.avg_rpm_activo ?? null;
+  const rpmLabel = st.avg_rpm_ciclo ? 'Real RPM' : 'Active RPM';
+  const rpmRango = ejDef?.rangos?.rpm || null;
+  const rpmEstado = ejDef ? (rpmRango ? evalRango(rpmVal, rpmRango) : '') : '';
+
+  document.getElementById('sheetContent').innerHTML = `
+    <div class="sheet-hd">
+      <div class="ses-num">
+        <span class="sn-lbl">SES</span>
+        <span class="sn-val">${s.id}</span>
+      </div>
+      <div class="ses-info">
+        <div class="ses-big ${!s.paciente?'empty':''}">${s.paciente||'No patient assigned'}</div>
+        <div class="ses-dates">${s.inicio||'—'}${s.fin?' → '+s.fin:' → <span style="color:#0d5c6e;font-weight:700">IN PROGRESS</span>'}</div>
+        ${notasTexto?`<div class="ses-notes">${notasTexto}</div>`:''}
+      </div>
+      <button class="btn btn-g" onclick="toggleAssignForm()" style="flex-shrink:0;padding:6px 10px">✏️</button>
+    </div>
+
+    <div class="abox ${assignOpen?'open':''}" id="assignForm">
+      <div class="abox-title">Assign — Session #${s.id}</div>
+      <div class="field"><label>Patient Name</label>
+        <input id="fn" type="text" placeholder="E.g.: John Smith" value="${(s.paciente||'').replace(/"/g,'&quot;')}">
+      </div>
+      <div class="field"><label>Exercise Performed</label>
+        <select id="fej">${ejOpciones}</select>
+      </div>
+      <div class="field"><label>Clinical Notes</label>
+        <textarea id="fno" placeholder="Diagnosis, observations...">${notasTexto}</textarea>
+      </div>
+      <div class="fbtns">
+        <button class="btn btn-p" onclick="saveAssign(${s.id})">Save</button>
+        <button class="btn btn-g" onclick="toggleAssignForm()">Cancel</button>
       </div>
     </div>
-    ${formOpen?`<div class="aform">
-      <div class="aform-title">Asignar paciente — Sesión #${s.id}</div>
-      <div class="field"><label>Nombre</label><input type="text" id="fn" value="${s.paciente||''}" placeholder="Ej: Carlos Mendoza"></div>
-      <div class="field"><label>Notas clínicas</label><textarea id="fno" placeholder="Diagnóstico, observaciones…">${s.notas||''}</textarea></div>
-      <div class="btn-row">
-        <button class="btn btn-p" onclick="guardar('${s.id}')">Guardar</button>
-        <button class="btn btn-g" onclick="toggleForm()">Cancelar</button>
+
+    ${ejDef ? `
+    <div class="ej-card">
+      <div class="ej-card-title">Exercise ${ejNum}</div>
+      <div class="ej-card-name">${ejDef.nombre}</div>
+      <div class="ej-card-obj">🎯 ${ejDef.objetivo}</div>
+      ${ejDef.nota ? `<div class="ej-card-obj" style="color:#2d3748;border-top:1px solid var(--line);padding-top:4px;margin-top:2px">ℹ ${ejDef.nota}</div>` : ''}
+    </div>` : ''}
+
+    <div class="stats-grid" style="margin-bottom:10px">
+      ${statCard('Cycles', ciclos, null, '', 'completed')}
+      ${ejDef && !rpmRango
+        ? `<div class="stat"><div class="sl">${rpmLabel}</div><div class="sv" style="font-size:16px">${rpmVal??'—'}</div><div class="rango" style="color:#2d3748">not applicable</div></div>`
+        : statCard(rpmLabel, rpmVal, rpmRango, 'rpm', rpmRango?`${rpmRango.min}–${rpmRango.max} rpm`:'')
+      }
+      <div class="stat ${nAp>0?'bad':''}">
+        <div class="sl">Apneas</div>
+        <div class="sv ${nAp>0?'bad':''}">${nAp}</div>
+        <div class="su">${st.max_ap?'max '+st.max_ap+' s':'no events ✓'}</div>
       </div>
-    </div>`:''}
-    <div class="tabs-row">
-      <div class="tab on" id="tb-sup" onclick="detTab('sup')">Tren Superior</div>
-      <div class="tab"    id="tb-inf" onclick="detTab('inf')">Tren Inferior</div>
-      <div class="tab"    id="tb-reg" onclick="detTab('reg')">Registro</div>
+      ${statCard('T. Inhale', st.avg_ti, ejDef?.rangos?.ti, 's', 'avg sec')}
+      ${statCard('T. Exhale', st.avg_te, ejDef?.rangos?.te, 's', 'avg sec')}
+      ${statCard('I:E Ratio', st.avg_ie ? '1:'+st.avg_ie : null, ejDef?.rangos?.ie, '', '')}
     </div>
-    <div class="tc on" id="tc-sup"><div class="jgrid">
-      ${jCard('hombro','derecho')}${jCard('hombro','izquierdo')}
-      ${jCard('codo','derecho')}${jCard('codo','izquierdo')}
-    </div></div>
-    <div class="tc" id="tc-inf"><div class="jgrid">
-      ${jCard('cadera','derecho')}${jCard('cadera','izquierdo')}
-      ${jCard('rodilla','derecho')}${jCard('rodilla','izquierdo')}
-      ${jCard('tobillo','derecho')}${jCard('tobillo','izquierdo')}
-    </div></div>
-    <div class="tc" id="tc-reg">
-      ${regs.length
-        ?`<div class="tbl-wrap"><table>
-            <thead><tr><th>Hora</th><th>Lado</th><th>Región</th><th>Articulación</th><th>Ejercicio</th><th>Ángulo</th></tr></thead>
-            <tbody>${regs.map(r=>`<tr>
-              <td><span class="badge">${r.timestamp}</span></td><td>${r.lado}</td>
-              <td><span class="${r.region==='superior'?'rt-sup':'rt-inf'}">${r.region}</span></td>
-              <td>${r.articulacion}</td><td>${r.ejercicio.replace(/_/g,' ')}</td>
-              <td style="color:var(--cyan);font-family:var(--mono);font-weight:600">${r.angulo}°</td>
-            </tr>`).join('')}</tbody>
-          </table></div>`
-        :`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-txt">Sin registros</div></div>`}
-    </div>`;
-  document.getElementById('det-acts').innerHTML=`
-    <button class="btn btn-g" onclick="toggleForm()" style="flex:1">✏️ Asignar</button>
-    <button class="btn btn-p" onclick="exportSes('${s.id}')" style="flex:1">⬇️ Exportar</button>
-    <button class="btn btn-d" onclick="confirmDel('${s.id}')">🗑️</button>`;
+
+    <div class="section" style="margin-bottom:10px">
+      <div class="sechd"><div class="sectitle">Time Distribution</div></div>
+      <div class="bars">
+        <div class="br"><div class="bl">Inhalation</div><div class="bt"><div class="bf i" style="width:${pct(st.avg_ti)}"></div></div><div class="bv">${st.avg_ti??0} s</div></div>
+        <div class="br"><div class="bl">Exhalation</div><div class="bt"><div class="bf e" style="width:${pct(st.avg_te)}"></div></div><div class="bv">${st.avg_te??0} s</div></div>
+        ${st.avg_pausa
+          ? `<div class="br"><div class="bl">Avg Pause</div><div class="bt"><div class="bf" style="width:${pct(st.avg_pausa)};background:linear-gradient(90deg,#4a3a90,#8b7fd4)"></div></div><div class="bv">${st.avg_pausa} s</div></div>`
+          : ''
+        }
+        ${st.avg_ap
+          ? `<div class="br"><div class="bl">Avg Apnea</div><div class="bt"><div class="bf a" style="width:${pct(st.avg_ap)}"></div></div><div class="bv">${st.avg_ap} s</div></div>`
+          : '<div class="no-apnea">No apneas ✓</div>'
+        }
+        ${st.n_terap>0?`<div style="padding:4px 0 0;font-family:var(--mono);font-size:9px;color:#5a3e00">⏸ Therapeutic: ${st.n_terap}</div>`:''}
+        ${st.n_patol>0?`<div style="padding:2px 0 0;font-family:var(--mono);font-size:9px;color:var(--red)">🚨 Pathological: ${st.n_patol}</div>`:''}
+      </div>
+    </div>
+
+    <div class="section" style="margin-bottom:10px">
+      <div class="sechd">
+        <div class="sectitle">Recorded Events</div>
+        <div class="badge ${nAp>0?'r':'c'}">${events.length}</div>
+      </div>
+      ${nAp>0?`<div class="alert-bar">
+        <span style="font-size:15px">${st.n_patol>0?'🚨':'⏸'}</span>
+        <div><strong>Apneas: ${nAp}</strong> — Max: ${st.max_ap} s · Avg: ${st.avg_ap} s
+        ${st.n_terap>0?`· <span style="color:#5a3e00">Therap: ${st.n_terap}</span>`:''}
+        ${st.n_patol>0?`· <span style="color:#8b0000">Pathol: ${st.n_patol}</span>`:''}
+        </div></div>`:''}
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Time</th><th>Type</th><th>Duration</th><th>I:E</th></tr></thead>
+          <tbody>
+            ${events.length
+              ? events.slice().reverse().slice(0,200).map(e=>`
+                  <tr style="${e.tipo==='APNEA_PATOL'?'background:rgba(255,68,102,.05)':e.tipo==='APNEA_TERAP'?'background:rgba(255,180,0,.04)':''}">
+                    <td style="font-family:var(--mono);font-size:9.5px;color:#2d3748">${e.timestamp}</td>
+                    <td><span class="tag ${e.tipo.toLowerCase()}">${
+                      e.tipo==='APNEA_TERAP'?'⏸ THERAP':
+                      e.tipo==='APNEA_PATOL'?'🚨 PATOL':e.tipo
+                    }</span></td>
+                    <td style="font-family:var(--mono);font-size:13px;color:#0d1117">${e.valor_s.toFixed(2)}<span style="font-size:9px;color:#2d3748"> s</span></td>
+                    <td>${e.ie_ratio>0
+                      ?`<span style="font-family:var(--mono);font-size:9px;padding:2px 5px;border-radius:3px;background:var(--blue-d);color:#0d5c6e;border:1px solid rgba(77,184,255,.15)">1:${e.ie_ratio.toFixed(2)}</span>`
+                      :'<span style="color:#2d3748">—</span>'
+                    }</td>
+                  </tr>`).join('')
+              : '<tr><td colspan="4" style="text-align:center;padding:24px;font-family:var(--mono);font-size:10px;color:#2d3748">No events recorded</td></tr>'
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <button class="btn btn-danger" onclick="deleteSession(${s.id})">🗑 Delete Session</button>
+    <div style="height:8px"></div>
+  `;
 }
-function detTab(n){
-  ['sup','inf','reg'].forEach(x=>{
-    document.getElementById('tc-'+x).classList.toggle('on',x===n);
-    document.getElementById('tb-'+x).classList.toggle('on',x===n);
+
+function toggleAssignForm() {
+  assignOpen = !assignOpen;
+  const f = document.getElementById('assignForm');
+  if (f) {
+    f.classList.toggle('open', assignOpen);
+    if (assignOpen) setTimeout(() => document.getElementById('fn')?.focus(), 50);
+  }
+}
+
+async function saveAssign(sid) {
+  const paciente = document.getElementById('fn')?.value.trim() || '';
+  const ejVal    = document.getElementById('fej')?.value || '0';
+  const notasRaw = document.getElementById('fno')?.value.trim() || '';
+  const notas    = serializeSessionMeta(ejVal, notasRaw);
+  await DB.updateSession(sid, { paciente, notas });
+  assignOpen = false;
+  renderSheetContent(sid);
+  renderSessionList();
+}
+
+async function deleteSession(sid) {
+  if (!confirm(`Delete session #${sid}?\nThis action cannot be undone.`)) return;
+  await DB.deleteSession(sid);
+  closeSheet();
+  renderSessionList();
+}
+
+// ══════════════════════════════════════════════════
+//  EXPORT / IMPORT
+// ══════════════════════════════════════════════════
+async function exportJSON() {
+  const sessions = await DB.getSessions();
+  if (!sessions.length) { alert('No sessions to export.'); return; }
+  const full = await Promise.all(sessions.map(async s => ({ ...s, eventos: await DB.getEvents(s.id) })));
+  const data = {
+    version:    2,
+    exportDate: new Date().toISOString(),
+    app:        'Respiratory Monitor BLE',
+    sessions:   full
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), {
+    href:     url,
+    download: 'resp_monitor_' + new Date().toISOString().slice(0,10) + '.json'
   });
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
-function toggleForm(){formOpen=!formOpen;renderDet();}
-async function guardar(id){
-  await updateSes(id,document.getElementById('fn').value.trim(),document.getElementById('fno').value.trim());
-  formOpen=false;await renderDet();renderSesList();toast('✓ Paciente asignado',true);
-}
-async function confirmDel(id){if(confirm(`¿Borrar sesión #${id}?`)){await deleteSes(id);goBack();}}
 
-//NAVEGACIÓN 
-let curScreen='cam';
-function goScreen(name){
-  ['cam','ses','det'].forEach(s=>document.getElementById('sc-'+s).classList.toggle('off',s!==name));
-  document.getElementById('nb-cam').classList.toggle('on',name==='cam');
-  document.getElementById('nb-ses').classList.toggle('on',name==='ses'||name==='det');
-  document.getElementById('botnav').classList.toggle('off',name==='det');
-  if(name==='ses') renderSesList();
-  curScreen=name;
+function importJSON() {
+  document.getElementById('fileInput').click();
 }
-function goBack(){goScreen(curScreen==='det'?'ses':'cam');}
 
-// NOTIFICACIONES
-let tTimer;
-function toast(msg,green=false){
-  const el=document.getElementById('toast');
-  el.textContent=msg;el.className='show'+(green?' g':'');
-  clearTimeout(tTimer);tTimer=setTimeout(()=>el.className='',2500);
-}
-function ldMsg(m){document.getElementById('ld-msg').textContent=m;}
-function setStatus(state,txt){
-  document.getElementById('sDot').className='dot'+(state==='on'?' on':state==='warn'?' warn':'');
-  document.getElementById('sTxt').textContent=txt;
-}
-document.addEventListener('keydown',e=>{
-  if(e.key==='s'||e.key==='S') saveSession();
-  if(e.key==='r'||e.key==='R') resetSession();
-});
+function handleImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data.sessions)) { alert('Invalid file: missing "sessions" field.'); return; }
 
-//INICIO
-document.getElementById('ld').style.transition='opacity .4s';
-if(location.protocol!=='https:'&&location.hostname!=='localhost'&&location.hostname!=='127.0.0.1'){
-  document.getElementById('ld').style.display='none';
-  document.getElementById('https-err').style.display='flex';
-}else{
-  window.addEventListener('load',()=>setTimeout(initPose,300));
+      const existing    = await DB.getSessions();
+      const existingIds = new Set(existing.map(s => s.id));
+      let imported = 0;
+
+      for (const item of data.sessions) {
+        const { eventos, ...sesData } = item;
+        if (!existingIds.has(sesData.id)) {
+          await DB.createSession(sesData);
+          if (Array.isArray(eventos)) {
+            for (const ev of eventos) await DB.addEvent(sesData.id, ev);
+          }
+          imported++;
+        }
+      }
+
+      DB.invalidateSessions();
+      renderSessionList();
+      alert(`✅ Imported ${imported} new sessions.${imported < data.sessions.length ? `\n(${data.sessions.length-imported} already existed)` : ''}`);
+    } catch(err) {
+      alert('Error reading file:\n' + err.message);
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
 }
+
+// ══════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════
+renderSessionList();
+renderLivePanel();
 </script>
 </body>
 </html>
