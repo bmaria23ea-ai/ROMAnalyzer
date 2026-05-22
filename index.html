@@ -446,6 +446,7 @@ function smoothAngle(buf,val,maxLen=5,clip=15){
   if(buf.length>maxLen) buf.shift();
   return buf.reduce((s,v)=>s+v,0)/buf.length;
 }
+
 // análisis
 const THR=12, VIS=0.50;
 const META={
@@ -483,16 +484,23 @@ function analyzeElbow(sh,el,wr){
   if(flex<8)   return ['extension_codo',0];
   return [null,0];
 }
+// Cadera: referencia de tronco corregida
+// En lugar de usar el punto hombro como extremo de un vector fijo,
+// se construye el vector tronco real (cadera→hombro) normalizado,
+// lo que es correcto aunque el torso esté inclinado (sentadilla, peso frontal)
 function analyzeHip(sh,hip,kn,side){
   // Vector tronco: desde cadera hacia hombro (dirección real del segmento)
   const trunk=[sh.x-hip.x,sh.y-hip.y];
   const leg  =[kn.x-hip.x,kn.y-hip.y];
-  // Flexión: rodilla sube por encima de la cadera: ángulo entre tronco y pierna
+
+  // Flexión: rodilla sube por encima de la cadera → ángulo entre tronco y pierna
   const va=vecAngle(trunk,leg);
   const flex=kn.y<hip.y-0.05?Math.min(va,125):0;
-  // Extensión: rodilla por debajo y algo lateral: complemento del ángulo tronco-pierna
+
+  // Extensión: rodilla por debajo y algo lateral → complemento del ángulo tronco-pierna
   const ext=(kn.y>hip.y&&Math.abs(kn.x-hip.x)>Math.abs(kn.y-hip.y)*0.2)?Math.min(180-va,30):0;
-  // Abducción: desplazamiento lateral del knee respecto a la cadera
+
+  // Abducción: desplazamiento lateral del knee respecto a la cadera (máx clínico 45°)
   let abd=0;
   if(Math.abs(kn.x-hip.x)>Math.abs(kn.y-hip.y)*0.5){
     if(side==='derecho'  &&kn.x<hip.x) abd=Math.min(va,45);
@@ -511,18 +519,29 @@ function analyzeKnee(hip,kn,an){
   if(flex>10) return ['flexion_rodilla',flex];
   return ['extension_rodilla',ang>160?0:180-ang];
 }
-//Tobillo
+// Tobillo: usa talón [29/30] como ref. distal (más estable y visible que dedo índice)
+// Tobillo: ángulo de la pierna respecto a la vertical
+// No depende de ningún punto del pie — solo usa rodilla y tobillo (landmarks más estables)
+// Referencia: vector vertical [0,-1] (hacia arriba en coords de imagen)
+// Posición neutra (pie plano, pierna vertical) → ángulo pierna-vertical ≈ 0°
+// Dorsiflexión: tobillo avanza, pierna se inclina hacia adelante → ángulo positivo frontal
+// Flexión plantar: talón sube, pierna se inclina hacia atrás → ángulo positivo posterior
+// Se usa la componente X del vector pierna para distinguir hacia dónde se inclina
 const _ankleLastAng={derecho:0,izquierdo:0};
 function analyzeAnkle(kn, an, side){
   if((kn.visibility||0) < 0.60) return [null, 0];
   if((an.visibility||0) < 0.70) return [null, 0];
-  // Vector pierna: tobillo: rodilla (apunta hacia arriba)
+
+  // Vector pierna: tobillo → rodilla (apunta hacia arriba)
   const px = kn.x - an.x;
-  const py = kn.y - an.y;  // en coords imagen Y crece hacia abajo, rodilla tiene Y menor
+  const py = kn.y - an.y;  // en coords imagen Y crece hacia abajo, rodilla tiene Y menor → py negativo
+
   if(Math.hypot(px, py) < 0.02) return [null, 0];
+
   // Ángulo entre la pierna y la vertical pura [0,-1]
   const vertical = [0, -1];
   const ang = vecAngle([px, py], vertical); // 0° = pierna recta, >0° = inclinada
+
   // Filtro de coherencia: descarta saltos > 15° entre frames
   const last = _ankleLastAng[side] ?? 0;
   if(Math.abs(ang - last) > 15){ _ankleLastAng[side] = last; return [null, 0]; }
@@ -530,17 +549,20 @@ function analyzeAnkle(kn, an, side){
   const delta = Math.abs(ang - last);
   if(delta > 15) { _ankleLastAng[side] = last; return [null, 0]; } // ruido
   if(delta < 2)  { return [null, 0]; }  // demasiado quieto → reposo
-  // px > 0 significa que el tobillo está adelantado respecto a la rodilla= dorsiflexión
-  // px < 0 significa que el tobillo está detrás de la rodilla= flexión plantar
-  // espejo: en cámara frontal/usuario los ejes se invierten, compensamos con Math.abs y px
+  // px > 0 significa que el tobillo está adelantado respecto a la rodilla → dorsiflexión
+  // px < 0 significa que el tobillo está detrás de la rodilla → flexión plantar
+  // (espejo: en cámara frontal/usuario los ejes se invierten, compensamos con Math.abs y px)
   const dorsi  = Math.max(0, Math.min(20, ang));
   const plantar = Math.max(0, Math.min(45, ang));
-  // Dirección horizontal de la inclinación para clasificar
+
+  // Usamos la dirección horizontal de la inclinación para clasificar
   if(Math.abs(px) < 0.03) return [null, 0]; // pierna demasiado vertical para clasificar
+
   if(px > 0 && dorsi >= 8)   return ['dorsiflexion_tobillo',    dorsi];
   if(px < 0 && plantar >= 8) return ['flexion_plantar_tobillo', plantar];
   return [null, 0];
 }
+
 // estado
 function localISO(d=new Date()){
   return d.toLocaleString('sv-SE').replace('T',' ');
@@ -674,6 +696,7 @@ function onResults(res){
       derecho:  {sh:lm[R.sh],el:lm[R.el],wr:lm[R.wr],hip:lm[R.hip],kn:lm[R.kn],an:lm[R.an],he:lm[R.he]},
       izquierdo:{sh:lm[L.sh],el:lm[L.el],wr:lm[L.wr],hip:lm[L.hip],kn:lm[L.kn],an:lm[L.an],he:lm[L.he]},
     };
+
   }else{
     setStatus('warn','Sin detectar');
     ctx.fillStyle='rgba(255,68,102,0.9)';
