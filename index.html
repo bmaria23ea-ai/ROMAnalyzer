@@ -358,11 +358,13 @@ tbody tr:last-child td { border-bottom:none; }
     <video id="vid" autoplay playsinline muted></video>
     <canvas id="cvs"></canvas>
     <div class="flash" id="flash"></div>
+
     <div class="fab-col">
       <button class="fab fab-s" onclick="saveSession()" title="Guardar (S)">💾</button>
       <button class="fab fab-r" onclick="resetSession()" title="Reset (R)">🔄</button>
       <button class="fab fab-c" onclick="switchCam()" title="Cambiar cámara" id="fab-flip">🔁</button>
     </div>
+
     <div class="ap">
       <div class="ap-row" id="ap-sup"></div>
       <div class="ap-row" id="ap-inf"></div>
@@ -463,7 +465,7 @@ const META={
   dorsiflexion_tobillo:    {n:'Dorsiflexión', r:'inferior'},
   flexion_plantar_tobillo: {n:'Flex.Plantar', r:'inferior'},
 };
-// Hombro
+// Hombro 2D: usa solo X e Y (sin Z ni detectPlane)
 // Flexion: codo sube sobre hombro | Extension: codo baja | Abduccion: codo se aleja lateral
 function analyzeShoulder(sh,el,hip){
   const ang=angle2d(hip,sh,el);
@@ -546,9 +548,7 @@ function analyzeAnkle(kn, an, side){
   const last = _ankleLastAng[side] ?? 0;
   if(Math.abs(ang - last) > 15){ _ankleLastAng[side] = last; return [null, 0]; }
   _ankleLastAng[side] = ang;
-  const delta = Math.abs(ang - last);
-  if(delta > 15) { _ankleLastAng[side] = last; return [null, 0]; } // ruido
-  if(delta < 2)  { return [null, 0]; }  // demasiado quieto → reposo
+
   // px > 0 significa que el tobillo está adelantado respecto a la rodilla → dorsiflexión
   // px < 0 significa que el tobillo está detrás de la rodilla → flexión plantar
   // (espejo: en cámara frontal/usuario los ejes se invierten, compensamos con Math.abs y px)
@@ -696,7 +696,21 @@ function onResults(res){
       derecho:  {sh:lm[R.sh],el:lm[R.el],wr:lm[R.wr],hip:lm[R.hip],kn:lm[R.kn],an:lm[R.an],he:lm[R.he]},
       izquierdo:{sh:lm[L.sh],el:lm[L.el],wr:lm[L.wr],hip:lm[L.hip],kn:lm[L.kn],an:lm[L.an],he:lm[L.he]},
     };
-
+    for(const side of SIDES){
+      const {sh,el,wr,hip,kn,an,he}=map[side];
+      const vs=Math.min(sh.visibility||0,el.visibility||0,wr.visibility||0);
+      const vi=Math.min(hip.visibility||0,kn.visibility||0,an.visibility||0);
+      if(vs>=VIS){
+        const[exS,aS]=analyzeShoulder(sh,el,hip);updateJoint(side,'hombro',exS||'reposo',aS);
+        const[exE,aE]=analyzeElbow(sh,el,wr);    updateJoint(side,'codo',  exE||'reposo',aE);
+      }else{updateJoint(side,'hombro','reposo',0);updateJoint(side,'codo','reposo',0);}
+      if(vi>=VIS){
+        const[exH,aH]=analyzeHip(sh,hip,kn,side);updateJoint(side,'cadera', exH||'reposo',aH);
+        const[exK,aK]=analyzeKnee(hip,kn,an);    updateJoint(side,'rodilla',exK||'reposo',aK);
+        const[exA,aA]=analyzeAnkle(kn,an,side);  updateJoint(side,'tobillo',exA||'reposo',aA);
+      }else{updateJoint(side,'cadera','reposo',0);updateJoint(side,'rodilla','reposo',0);updateJoint(side,'tobillo','reposo',0);}
+    }
+    tick();renderAP();
   }else{
     setStatus('warn','Sin detectar');
     ctx.fillStyle='rgba(255,68,102,0.9)';
