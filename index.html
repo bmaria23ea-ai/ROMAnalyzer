@@ -566,8 +566,8 @@ function updateJoint(side,joint,ex,angle){
   const d=jData[side][joint];
   d.exercise=ex;d.angle=smoothAngle(d.buf,angle);
   if(ex!=='reposo'&&angle>0){
-    d.max=Math.max(d.max,angle);
-    d.min=d.min===null?angle:Math.min(d.min,angle);
+  if(d.angle>d.max) d.max=d.angle;  // ← suavizado, resiste spikes
+  d.min=d.min===null?angle:Math.min(d.min,angle);
   }
 }
 function tick(){
