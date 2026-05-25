@@ -552,7 +552,7 @@ const COLS={hombro:'var(--blue)',codo:'var(--cyan)',cadera:'var(--orange)',rodil
 function mkState(){
   const s={};
   for(const side of SIDES){s[side]={};
-    for(const j of JOINTS) s[side][j]={buf:[],angle:0,max:0,min:180,exercise:'reposo'};
+    for(const j of JOINTS) s[side][j]={buf:[],angle:0,max:0,min:null,exercise:'reposo'};
   }
   return s;
 }
@@ -565,7 +565,10 @@ let jData=mkState(),registro=[],movs=mkMovs(),ticks=0,sesStart=null;
 function updateJoint(side,joint,ex,angle){
   const d=jData[side][joint];
   d.exercise=ex;d.angle=smoothAngle(d.buf,angle);
-  if(ex!=='reposo'&&d.angle>0){d.max=Math.max(d.max,d.angle);d.min=Math.min(d.min,d.angle);}
+  if(ex!=='reposo'&&angle>0){
+    d.max=Math.max(d.max,angle);
+    d.min=d.min===null?angle:Math.min(d.min,angle);
+  }
 }
 function tick(){
   if(++ticks%30!==0) return;
@@ -613,7 +616,7 @@ async function saveSession(){
   const maxMin={};
   for(const side of SIDES) for(const j of JOINTS){
     const d=jData[side][j];
-    maxMin[`${j}_${side}`]={max:Math.round(d.max*100)/100,min:d.min<180?Math.round(d.min*100)/100:0};
+    maxMin[`${j}_${side}`]={max:Math.round(d.max*100)/100,min:d.min!==null?Math.round(d.min*100)/100:null};
   }
   const ses={id:sid,inicio:sesStart||now,fin:now,paciente:'',notas:'',tipo:'gonio_fullbody',
     max_min:maxMin,movimientos_detectados:JSON.parse(JSON.stringify(movs)),registro:[...registro]};
@@ -820,7 +823,7 @@ async function renderDet(){
       <div class="jcard-ttl"><span class="dot2" style="background:${col}"></span>${j.toUpperCase()} · ${side==='derecho'?'DER.':'IZQ.'}</div>
       <div class="jbody">
         <div><div class="jval-lbl">Máximo</div><div class="jval-num" style="color:${col}">${(d.max||0).toFixed(0)}</div><div class="jval-unit">grados</div></div>
-        <div><div class="jval-lbl">Mínimo act.</div><div class="jval-num">${d.min>0?d.min.toFixed(0):'—'}</div><div class="jval-unit">grados</div></div>
+        <div><div class="jval-lbl">Mínimo act.</div><div class="jval-num">${d.min!==null?d.min.toFixed(0):'—'}</div><div class="jval-unit">grados</div></div>
       </div>
       ${entries.length?`<div class="divider"></div>${entries.map(([ex,a])=>`<div class="mv-row"><div class="mv-name">${ex.replace(/_/g,' ')}</div><div class="mv-ang" style="color:${col}">${parseFloat(a).toFixed(0)}°</div></div>`).join('')}`:''}
     </div>`;
