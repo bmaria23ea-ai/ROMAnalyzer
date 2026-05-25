@@ -501,8 +501,8 @@ function analyzeHip(sh,hip,kn,side){
   const squat=kn.y>hip.y?Math.min(180-va,125):0;  // 
   const bestFlex=Math.max(flex,squat); 
   // Prioridad cuando flex supera el techo de abducción
-  if(flex>45&&flex>ext)            return ['flexion_cadera',flex];
-  if(flex>THR&&flex>abd&&flex>ext) return ['flexion_cadera',flex];
+  if(bestFlex>45&&bestFlex>ext)            return ['flexion_cadera',bestFlex];
+  if(bestFlex>THR&&bestFlex>abd&&bestFlex>ext) return ['flexion_cadera',bestFlex];
   if(ext>THR&&ext>abd)             return ['extension_cadera',ext];
   if(abd>THR)                      return ['abduccion_cadera',abd];
   return [null,0];
