@@ -498,6 +498,8 @@ function analyzeHip(sh,hip,kn,side){
     if(side==='derecho'  &&kn.x<hip.x) abd=Math.min(va,45);
     if(side==='izquierdo'&&kn.x>hip.x) abd=Math.min(va,45);
   }
+  const squat=kn.y>hip.y?Math.min(180-va,125):0;  // 
+  const bestFlex=Math.max(flex,squat); 
   // Prioridad cuando flex supera el techo de abducción
   if(flex>45&&flex>ext)            return ['flexion_cadera',flex];
   if(flex>THR&&flex>abd&&flex>ext) return ['flexion_cadera',flex];
