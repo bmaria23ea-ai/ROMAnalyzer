@@ -478,7 +478,7 @@ function analyzeShoulder(sh,el,hip){
 }
 // Codo 2D: flex = 180 - angulo hombro->codo->muneca en plano XY
 function analyzeElbow(sh,el,wr){
-  const flex=Math.max(0,Math.min(145,180-angle2d(sh,el,wr)));
+  const flex=Math.max(0,Math.min(150,180-angle2d(sh,el,wr)));//145
   if(flex>THR) return ['flexion_codo',flex];
   if(flex<8)   return ['extension_codo',0];
   return [null,0];
