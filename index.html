@@ -498,7 +498,8 @@ function analyzeHip(sh,hip,kn,side){
     if(side==='derecho'  &&kn.x<hip.x) abd=Math.min(va,45);
     if(side==='izquierdo'&&kn.x>hip.x) abd=Math.min(va,45);
   }
-
+  // Prioridad cuando flex supera el techo de abducción
+  if(flex>45&&flex>ext)            return ['flexion_cadera',flex];
   if(flex>THR&&flex>abd&&flex>ext) return ['flexion_cadera',flex];
   if(ext>THR&&ext>abd)             return ['extension_cadera',ext];
   if(abd>THR)                      return ['abduccion_cadera',abd];
@@ -527,8 +528,8 @@ function analyzeAnkle(kn, an, side){
   const last = _ankleLastAng[side] ?? 0;
   if(Math.abs(ang - last) > 15){ _ankleLastAng[side] = last; return [null, 0]; }
   _ankleLastAng[side] = ang;
-  const delta = Math.abs(ang - last);
-  if(delta > 15) { _ankleLastAng[side] = last; return [null, 0]; } // ruido
+  const delta = Math.abs(ang - last);//REDUNDAN
+  //if(delta > 15) { _ankleLastAng[side] = last; return [null, 0]; } // ruido
   if(delta < 2)  { return [null, 0]; }  // demasiado quieto → reposo
   // px > 0 significa que el tobillo está adelantado respecto a la rodilla= dorsiflexión
   // px < 0 significa que el tobillo está detrás de la rodilla= flexión plantar
@@ -564,12 +565,12 @@ function mkMovs(){
 let jData=mkState(),registro=[],movs=mkMovs(),ticks=0,sesStart=null;
 function updateJoint(side,joint,ex,angle){
   const d=jData[side][joint];
-  d.exercise=ex;d.angle=smoothAngle(d.buf,angle);
-  if(ex!=='reposo'&&angle>0){
-  if(d.angle>d.max) d.max=d.angle;  // ← suavizado, resiste spikes
-  d.min=d.min===null?angle:Math.min(d.min,angle);
+  d.exercise=ex; d.angle=smoothAngle(d.buf,angle);
+  if(ex!=='reposo'&&d.angle>0){            // usa d.angle para ambos
+    if(d.angle>d.max) d.max=d.angle;
+    d.min=d.min===null?d.angle:Math.min(d.min,d.angle); // consistente
   }
-}
+}  
 function tick(){
   if(++ticks%30!==0) return;
   if(!sesStart) sesStart=localISO();
@@ -580,7 +581,7 @@ function tick(){
       const m=META[d.exercise];
       registro.push({timestamp:ts,lado:side,region:m.r,articulacion:j,ejercicio:d.exercise,angulo:Math.round(d.angle*100)/100});
       const k=`${j}_${side}`;
-      movs[k][d.exercise]=Math.max(movs[k][d.exercise]||0,d.max);
+      movs[k][d.exercise]=Math.max(movs[k][d.exercise]||0, d.angle); // d.angle, no d.max
     }
   }
 }
