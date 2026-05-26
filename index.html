@@ -8,7 +8,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3/drawing_utils.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5/pose.js" crossorigin="anonymous"></script>
 <style>
-/* VARIABLES */
 :root {
   --bg:#07080f; --bg1:#0c0f1a; --bg2:#111525; --bg3:#161c30;
   --line:#1c2640; --line2:#243050;
@@ -29,11 +28,9 @@ html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--txt)
 button,input,textarea { font-family:var(--head); outline:none; border:none; }
 button { cursor:pointer; }
 
-/*PANTALLAS*/
 .screen { position:fixed; inset:0; display:flex; flex-direction:column; overflow:hidden; }
 .screen.off { display:none !important; }
 
-/*ENCABEZADO COMPARTIDO*/
 .hd {
   flex-shrink:0; height:var(--hd-h);
   background:var(--bg1); border-bottom:1px solid var(--line);
@@ -58,7 +55,6 @@ button { cursor:pointer; }
 .dot.on   { background:var(--green);  box-shadow:0 0 6px var(--green); }
 .dot.warn { background:var(--orange); box-shadow:0 0 6px var(--orange); }
 
-/*BOTONES NAVEGACIÓN*/
 .bot-nav {
   position:fixed; bottom:0; left:0; right:0;
   height:calc(var(--nav-h) + var(--safe-b));
@@ -77,20 +73,15 @@ button { cursor:pointer; }
 .nb.on  { color:var(--cyan); }
 .nb.on svg { filter:drop-shadow(0 0 4px var(--cyan)); }
 
-/*CÁMARA*/
 #sc-cam { background:#000; }
-
 .cam-wrap {
   flex:1; position:relative; overflow:hidden;
   display:flex; align-items:center; justify-content:center;
   margin-bottom:var(--nav-h);
 }
-
-/*Video: espejo*/
 #vid { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transform:scaleX(-1); }
 #cvs { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 
-/*BOTONES FLOTANTES*/
 .fab-col { position:absolute; top:12px; right:12px; display:flex; flex-direction:column; gap:8px; z-index:20; }
 .fab {
   width:48px; height:48px; border-radius:13px;
@@ -103,7 +94,6 @@ button { cursor:pointer; }
 .fab-r { background:rgba(255,68,102,.12); border-color:rgba(255,68,102,.3); }
 .fab-c { background:rgba(77,184,255,.15); border-color:rgba(77,184,255,.4); }
 
-/*PANEL DE ANGULOS*/
 .ap {
   position:absolute; bottom:0; left:0; right:0;
   background:linear-gradient(to top,rgba(7,8,15,.97) 65%,transparent);
@@ -120,11 +110,9 @@ button { cursor:pointer; }
 .apc-ex  { font-family:var(--mono); font-size:7px; color:var(--txt2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
 .apc-max { font-family:var(--mono); font-size:7px; color:var(--txt3); }
 
-/*Destello de guardado*/
 .flash { position:absolute; inset:0; background:rgba(0,229,204,.18); opacity:0; pointer-events:none; transition:opacity .3s; z-index:50; }
 .flash.show { opacity:1; }
 
-/*PANTALLA: SESIONES*/
 #sc-ses { background:var(--bg); }
 .ses-body { flex:1; overflow-y:auto; padding:8px 10px 10px; margin-bottom:var(--nav-h); }
 
@@ -164,9 +152,7 @@ button { cursor:pointer; }
 .empty-icon  { font-size:38px; opacity:.2; }
 .empty-txt   { font-family:var(--mono); font-size:10px; color:var(--txt3); text-align:center; line-height:1.7; }
 
-/*PANTALLA: DETALLE SESIÓN*/
 #sc-det { background:var(--bg); }
-
 .back-hd {
   flex-shrink:0; height:var(--hd-h);
   background:var(--bg1); border-bottom:1px solid var(--line);
@@ -188,7 +174,6 @@ button { cursor:pointer; }
   padding-bottom:calc(10px + var(--safe-b)); z-index:50;
 }
 
-/* Tarjeta de encabezado en sesiones*/
 .shd-card {
   background:var(--bg1); border:1px solid var(--line); border-radius:10px;
   padding:14px; display:flex; gap:12px; align-items:flex-start; margin-bottom:10px;
@@ -206,7 +191,6 @@ button { cursor:pointer; }
 .sdates { font-family:var(--mono); font-size:9px; color:var(--txt3); margin-top:3px; }
 .snotes { font-size:11px; color:var(--txt2); margin-top:4px; }
 
-/* Asignar*/
 .aform {
   background:var(--bg2); border:1px solid var(--line2); border-radius:10px;
   padding:14px; margin-bottom:10px; display:flex; flex-direction:column; gap:10px;
@@ -220,7 +204,6 @@ button { cursor:pointer; }
 .field textarea { resize:none; height:64px; }
 .field input:focus,.field textarea:focus { border-color:var(--cyan); }
 
-/*Pestañas*/
 .tabs-row { display:flex; gap:4px; margin-bottom:10px; flex-wrap:wrap; }
 .tab {
   padding:6px 12px; border-radius:6px; font-family:var(--mono); font-size:9px;
@@ -231,7 +214,6 @@ button { cursor:pointer; }
 .tc { display:none; }
 .tc.on { display:block; }
 
-/*Tarjeta de articulaciones*/
 .jgrid { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
 .jcard {
   background:var(--bg1); border:1px solid var(--line); border-radius:8px; padding:11px;
@@ -251,7 +233,6 @@ button { cursor:pointer; }
 .mv-name   { font-size:8px; color:var(--txt2); font-family:var(--mono); }
 .mv-ang    { font-family:var(--mono); font-size:11px; font-weight:600; }
 
-/*Tabla de registro*/
 .tbl-wrap { border-radius:8px; border:1px solid var(--line); overflow-x:auto; }
 table     { width:100%; border-collapse:collapse; }
 thead th  {
@@ -265,7 +246,6 @@ tbody tr:last-child td { border-bottom:none; }
 .rt-sup   { display:inline-flex; padding:2px 6px; border-radius:4px; font-family:var(--mono); font-size:8px; font-weight:600; background:var(--blue-d); color:var(--blue); border:1px solid rgba(77,184,255,.2); }
 .rt-inf   { display:inline-flex; padding:2px 6px; border-radius:4px; font-family:var(--mono); font-size:8px; font-weight:600; background:var(--orange-d); color:var(--orange); border:1px solid rgba(255,140,66,.2); }
 
-/*Botones*/
 .btn { padding:9px 16px; border-radius:7px; font-size:11px; font-weight:600; transition:all .15s; border:1px solid transparent; cursor:pointer; }
 .btn:active { transform:scale(.97); }
 .btn-p { background:var(--cyan); color:#000; border-color:var(--cyan); }
@@ -274,7 +254,6 @@ tbody tr:last-child td { border-bottom:none; }
 .btn-d { background:transparent; color:var(--red); border-color:rgba(255,68,102,.3); }
 .btn-row { display:flex; gap:8px; }
 
-/*Notificaciones*/
 #toast {
   position:fixed; bottom:calc(var(--nav-h) + 14px); left:50%;
   transform:translateX(-50%) translateY(14px);
@@ -286,7 +265,6 @@ tbody tr:last-child td { border-bottom:none; }
 #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 #toast.g    { border-color:rgba(0,229,204,.3); color:var(--cyan); }
 
-/*Cargando*/
 #ld {
   position:fixed; inset:0; background:var(--bg); z-index:500;
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
@@ -300,7 +278,6 @@ tbody tr:last-child td { border-bottom:none; }
 .ld-fill { height:100%; background:linear-gradient(90deg,var(--cyan),var(--blue)); border-radius:99px; animation:ldbar 1.4s ease-in-out infinite; }
 @keyframes ldbar { 0%{transform:translateX(-100%)} 100%{transform:translateX(500%)} }
 
-/* HTTPS error */
 #https-err {
   position:fixed; inset:0; background:var(--bg); z-index:600;
   display:none; flex-direction:column; align-items:center; justify-content:center;
@@ -315,7 +292,6 @@ tbody tr:last-child td { border-bottom:none; }
 </head>
 <body>
 
-<!--CARGANDO-->
 <div id="ld">
   <div class="ld-logo">
     <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round">
@@ -329,16 +305,13 @@ tbody tr:last-child td { border-bottom:none; }
   <div class="ld-bar"><div class="ld-fill"></div></div>
 </div>
 
-<!-- HTTPS ERROR-->
 <div id="https-err">
   <h2>⚠ Se requiere HTTPS</h2>
   <p>Para acceder a la cámara desde un celular<br>el archivo debe servirse desde HTTPS.<br><br>Súbelo a GitHub Pages o usa localhost.</p>
 </div>
 
-<!--NOTIFICACIONES-->
 <div id="toast"></div>
 
-<!--CÁMARA-->
 <div id="sc-cam" class="screen">
   <div class="hd">
     <div class="logo-mark">
@@ -353,7 +326,6 @@ tbody tr:last-child td { border-bottom:none; }
       <div class="chip"><div class="dot" id="sDot"></div><span id="sTxt">Iniciando</span></div>
     </div>
   </div>
-
   <div class="cam-wrap">
     <video id="vid" autoplay playsinline muted></video>
     <canvas id="cvs"></canvas>
@@ -370,7 +342,6 @@ tbody tr:last-child td { border-bottom:none; }
   </div>
 </div>
 
-<!-- SESIONES -->
 <div id="sc-ses" class="screen off">
   <div class="hd">
     <div class="logo-mark">
@@ -396,7 +367,6 @@ tbody tr:last-child td { border-bottom:none; }
   </div>
 </div>
 
-<!-- DETALLES -->
 <div id="sc-det" class="screen off">
   <div class="back-hd">
     <button class="back-btn" onclick="goBack()">← Atrás</button>
@@ -406,7 +376,6 @@ tbody tr:last-child td { border-bottom:none; }
   <div class="det-acts" id="det-acts"></div>
 </div>
 
-<!-- NAVEGACIÓN -->
 <nav class="bot-nav" id="botnav">
   <button class="nb on" id="nb-cam" onclick="goScreen('cam')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -428,512 +397,630 @@ tbody tr:last-child td { border-bottom:none; }
 <script>
 'use strict';
 
-//operaciones matemáticas
-const DEG=r=>r*180/Math.PI;
-function vNorm(v){ return Math.sqrt(v.reduce((s,x)=>s+x*x,0)); }
-function vDot(a,b){ return a.reduce((s,x,i)=>s+x*b[i],0); }
-function vecAngle(v1,v2){
-  const n1=vNorm(v1),n2=vNorm(v2);
-  if(n1<1e-6||n2<1e-6) return 0;
-  return DEG(Math.acos(Math.max(-1,Math.min(1,vDot(v1,v2)/(n1*n2)))));
+// ── MATEMÁTICAS ──────────────────────────────────────────────────────────────
+const DEG = r => r * 180 / Math.PI;
+function vNorm(v) { return Math.sqrt(v.reduce((s, x) => s + x * x, 0)); }
+function vDot(a, b) { return a.reduce((s, x, i) => s + x * b[i], 0); }
+function vecAngle(v1, v2) {
+  const n1 = vNorm(v1), n2 = vNorm(v2);
+  if (n1 < 1e-6 || n2 < 1e-6) return 0;
+  return DEG(Math.acos(Math.max(-1, Math.min(1, vDot(v1, v2) / (n1 * n2)))));
 }
-function angle2d(p1,p2,p3){
-  return vecAngle([p1.x-p2.x,p1.y-p2.y],[p3.x-p2.x,p3.y-p2.y]);
+function angle2d(p1, p2, p3) {
+  return vecAngle([p1.x - p2.x, p1.y - p2.y], [p3.x - p2.x, p3.y - p2.y]);
 }
-function smoothAngle(buf,val,maxLen=5,clip=15){
-  if(buf.length>0) val=Math.max(buf[buf.length-1]-clip,Math.min(buf[buf.length-1]+clip,val));
+
+// Suavizado: buffer de N frames + recorte de saltos bruscos
+function smoothAngle(buf, val, maxLen = 10, clip = 8) {
+  if (buf.length > 0) val = Math.max(buf[buf.length - 1] - clip, Math.min(buf[buf.length - 1] + clip, val));
   buf.push(val);
-  if(buf.length>maxLen) buf.shift();
-  return buf.reduce((s,v)=>s+v,0)/buf.length;
+  if (buf.length > maxLen) buf.shift();
+  return buf.reduce((s, v) => s + v, 0) / buf.length;
 }
-// análisis
-const THR=12, VIS=0.50;
-const META={
-  flexion_hombro:          {n:'Flexión',      r:'superior'},
-  extension_hombro:        {n:'Extensión',    r:'superior'},
-  abduccion_hombro:        {n:'Abducción',    r:'superior'},
-  flexion_codo:            {n:'Flexión',      r:'superior'},
-  extension_codo:          {n:'Extensión',    r:'superior'},
-  flexion_cadera:          {n:'Flexión',      r:'inferior'},
-  extension_cadera:        {n:'Extensión',    r:'inferior'},
-  abduccion_cadera:        {n:'Abducción',    r:'inferior'},
-  flexion_rodilla:         {n:'Flexión',      r:'inferior'},
-  extension_rodilla:       {n:'Extensión',    r:'inferior'},
-  dorsiflexion_tobillo:    {n:'Dorsiflexión', r:'inferior'},
-  flexion_plantar_tobillo: {n:'Flex.Plantar', r:'inferior'},
+
+// ── RANGOS FISIOLÓGICOS (AAOS) ────────────────────────────────────────────────
+// Valores máximos clínicamente posibles — se usan para DESCARTAR, no para clampar
+const PHYS = {
+  flexion_hombro:          180,
+  extension_hombro:         60,
+  abduccion_hombro:        180,
+  flexion_codo:            145,
+  extension_codo:           10,
+  flexion_cadera:          120,
+  extension_cadera:         30,
+  abduccion_cadera:         45,
+  flexion_rodilla:         135,
+  extension_rodilla:        10,
+  dorsiflexion_tobillo:     20,
+  flexion_plantar_tobillo:  50,
 };
-// Hombro
-// Flexion: codo sube sobre hombro | Extension: codo baja | Abduccion: codo se aleja lateral
-function analyzeShoulder(sh,el,hip){
-  const ang=angle2d(hip,sh,el);
-  const ref={x:sh.x,y:sh.y+0.3};
-  const abd=angle2d(ref,sh,el);
-  if(ang>THR&&el.y<sh.y-0.01) return ['flexion_hombro',ang];
-  if(el.y>sh.y+0.02){
-    const ext=Math.max(0,Math.min(45,ang));
-    if(ext>THR) return ['extension_hombro',ext];
+
+// Umbral mínimo de movimiento activo
+const THR = 12;
+// Visibilidad mínima MediaPipe
+const VIS = 0.75;
+// Frames consecutivos antes de actualizar el máximo
+const STABLE_FRAMES = 3;
+
+const META = {
+  flexion_hombro:          { n: 'Flexión',      r: 'superior' },
+  extension_hombro:        { n: 'Extensión',    r: 'superior' },
+  abduccion_hombro:        { n: 'Abducción',    r: 'superior' },
+  flexion_codo:            { n: 'Flexión',      r: 'superior' },
+  extension_codo:          { n: 'Extensión',    r: 'superior' },
+  flexion_cadera:          { n: 'Flexión',      r: 'inferior' },
+  extension_cadera:        { n: 'Extensión',    r: 'inferior' },
+  abduccion_cadera:        { n: 'Abducción',    r: 'inferior' },
+  flexion_rodilla:         { n: 'Flexión',      r: 'inferior' },
+  extension_rodilla:       { n: 'Extensión',    r: 'inferior' },
+  dorsiflexion_tobillo:    { n: 'Dorsiflexión', r: 'inferior' },
+  flexion_plantar_tobillo: { n: 'Flex.Plantar', r: 'inferior' },
+};
+
+// ── ANÁLISIS DE ARTICULACIONES ────────────────────────────────────────────────
+
+function analyzeShoulder(sh, el, hip) {
+  const ang = angle2d(hip, sh, el);
+  const ref = { x: sh.x, y: sh.y + 0.3 };
+  const abd = angle2d(ref, sh, el);
+
+  if (ang > THR && el.y < sh.y - 0.01) {
+    if (ang > PHYS.flexion_hombro) return [null, 0];
+    return ['flexion_hombro', ang];
   }
-  if(Math.abs(el.x-sh.x)>Math.abs(el.y-sh.y)*0.45&&abd>THR) return ['abduccion_hombro',abd];
-  return [null,0];
-}
-// Codo 2D: flex = 180 - angulo hombro->codo->muneca en plano XY
-function analyzeElbow(sh,el,wr){
-  const flex=Math.max(0,Math.min(145,180-angle2d(sh,el,wr)));
-  if(flex>THR) return ['flexion_codo',flex];
-  if(flex<8)   return ['extension_codo',0];
-  return [null,0];
-}
-function analyzeHip(sh,hip,kn,side){
-  const trunk=[sh.x-hip.x,sh.y-hip.y],leg=[kn.x-hip.x,kn.y-hip.y];
-  const va=vecAngle(trunk,leg);
-  const vertical=[0,-1];
-  const trunkAng=vecAngle(trunk,vertical);
-  // Flexión pura: rodilla sobre cadera
-  const pureFlex=hip.y-kn.y>0.02?Math.min(va,125):0;
-  // Flexión sentadilla: tronco inclinado + rodilla abajo
-  const squatFlex=(trunkAng>8&&kn.y>hip.y)?Math.min(trunkAng*2.5,125):0;
-  const flex=Math.max(pureFlex,squatFlex);
-  const ext=(kn.y>hip.y&&Math.abs(kn.x-hip.x)>Math.abs(kn.y-hip.y)*0.2)?Math.min(180-va,30):0;
-  let abd=0;
-  if(Math.abs(kn.x-hip.x)>Math.abs(kn.y-hip.y)*0.8){
-    if(side==='derecho'&&kn.x<hip.x) abd=Math.min(va,45);
-    if(side==='izquierdo'&&kn.x>hip.x) abd=Math.min(va,45);
+  if (el.y > sh.y + 0.02) {
+    const ext = 180 - ang;
+    if (ext < THR || ext > PHYS.extension_hombro) return [null, 0];
+    return ['extension_hombro', ext];
   }
-  if(flex>THR&&flex>=ext&&flex>=abd) return ['flexion_cadera',Math.min(flex,125)];
-  if(ext>THR&&ext>abd)               return ['extension_cadera',Math.min(ext,30)];
-  if(abd>THR)                        return ['abduccion_cadera',Math.min(abd,45)];
-  return [null,0];
-}
-function analyzeKnee(hip,kn,an){
-  const ul=[hip.x-kn.x,hip.y-kn.y],ll=[an.x-kn.x,an.y-kn.y];
-  const ang=vecAngle(ul,ll);
-  const flex=Math.max(0,Math.min(140,180-ang));
-  if(flex>10) return ['flexion_rodilla',flex];
-  return ['extension_rodilla',ang>160?0:180-ang];
-}
-//Tobillo
-const _ankleLastAng={derecho:0,izquierdo:0};
-function analyzeAnkle(kn, an, side){
-  if((kn.visibility||0) < 0.60) return [null, 0];
-  if((an.visibility||0) < 0.70) return [null, 0];
-  // Vector pierna: tobillo: rodilla (apunta hacia arriba)
-  const px = kn.x - an.x;
-  const py = kn.y - an.y;  // en coords imagen Y crece hacia abajo, rodilla tiene Y menor
-  if(Math.hypot(px, py) < 0.02) return [null, 0];
-  // Ángulo entre la pierna y la vertical pura [0,-1]
-  const vertical = [0, -1];
-  const ang = vecAngle([px, py], vertical); // 0° = pierna recta, >0° = inclinada
-  // Filtro de coherencia: descarta saltos > 15° entre frames
-  const last = _ankleLastAng[side] ?? 0;
-  if(Math.abs(ang - last) > 15){ _ankleLastAng[side] = last; return [null, 0]; }
-  const delta = Math.abs(ang - last);//REDUNDAN
-  _ankleLastAng[side] = ang;
-    //if(delta > 15) { _ankleLastAng[side] = last; return [null, 0]; } // ruido
-  if(delta < 2)  { return [null, 0]; }  // demasiado quieto → reposo
-  // px > 0 significa que el tobillo está adelantado respecto a la rodilla= dorsiflexión
-  // px < 0 significa que el tobillo está detrás de la rodilla= flexión plantar
-  // espejo: en cámara frontal/usuario los ejes se invierten, compensamos con Math.abs y px
-  const dorsi  = Math.max(0, Math.min(20, ang));
-  const plantar = Math.max(0, Math.min(45, ang));
-  // Dirección horizontal de la inclinación para clasificar
-  if(Math.abs(px) < 0.03) return [null, 0]; // pierna demasiado vertical para clasificar
-  if(px > 0 && dorsi >= 8)   return ['dorsiflexion_tobillo',    dorsi];
-  if(px < 0 && plantar >= 8) return ['flexion_plantar_tobillo', plantar];
+  if (Math.abs(el.x - sh.x) > Math.abs(el.y - sh.y) * 0.45 && abd > THR) {
+    if (abd > PHYS.abduccion_hombro) return [null, 0];
+    return ['abduccion_hombro', abd];
+  }
   return [null, 0];
 }
-// estado
-function localISO(d=new Date()){
-  return d.toLocaleString('sv-SE').replace('T',' ');
+
+function analyzeElbow(sh, el, wr) {
+  const flex = 180 - angle2d(sh, el, wr);
+  if (flex < 0 || flex > PHYS.flexion_codo) return [null, 0];
+  if (flex > THR) return ['flexion_codo', flex];
+  if (flex < 8)   return ['extension_codo', 0];
+  return [null, 0];
 }
-const SIDES=['derecho','izquierdo'];
-const JOINTS=['hombro','codo','cadera','rodilla','tobillo'];
-const J_SUP=['hombro','codo'],J_INF=['cadera','rodilla','tobillo'];
-const COLS={hombro:'var(--blue)',codo:'var(--cyan)',cadera:'var(--orange)',rodilla:'var(--green)',tobillo:'var(--purple)'};
-function mkState(){
-  const s={};
-  for(const side of SIDES){s[side]={};
-    for(const j of JOINTS)
-      s[side][j]={buf:[],angle:0,max:0,min:null,exMax:0,exMin:null,exercise:'reposo'};
-  }  
+
+function analyzeHip(sh, hip, kn, side) {
+  const trunk = [sh.x - hip.x, sh.y - hip.y];
+  const leg   = [kn.x - hip.x, kn.y - hip.y];
+  const va = vecAngle(trunk, leg);
+  const trunkAng = vecAngle(trunk, [0, -1]);
+
+  const pureFlex  = hip.y - kn.y > 0.02 ? va : 0;
+  const squatFlex = trunkAng > 8 && kn.y > hip.y ? trunkAng * 2.5 : 0;
+  const flex = Math.max(pureFlex, squatFlex);
+  const ext  = kn.y > hip.y && Math.abs(kn.x - hip.x) > Math.abs(kn.y - hip.y) * 0.2 ? 180 - va : 0;
+
+  let abd = 0;
+  if (Math.abs(kn.x - hip.x) > Math.abs(kn.y - hip.y) * 0.8) {
+    if (side === 'derecho'   && kn.x < hip.x) abd = va;
+    if (side === 'izquierdo' && kn.x > hip.x) abd = va;
+  }
+
+  if (flex > THR && flex >= ext && flex >= abd) {
+    if (flex > PHYS.flexion_cadera) return [null, 0];
+    return ['flexion_cadera', flex];
+  }
+  if (ext > THR && ext > abd) {
+    if (ext > PHYS.extension_cadera) return [null, 0];
+    return ['extension_cadera', ext];
+  }
+  if (abd > THR) {
+    if (abd > PHYS.abduccion_cadera) return [null, 0];
+    return ['abduccion_cadera', abd];
+  }
+  return [null, 0];
+}
+
+function analyzeKnee(hip, kn, an) {
+  const ul  = [hip.x - kn.x, hip.y - kn.y];
+  const ll  = [an.x  - kn.x, an.y  - kn.y];
+  const ang = vecAngle(ul, ll);
+  const flex = 180 - ang;
+  if (flex < 0 || flex > PHYS.flexion_rodilla) return [null, 0];
+  if (flex > THR) return ['flexion_rodilla', flex];
+  return ['extension_rodilla', ang > 160 ? 0 : flex];
+}
+
+// Estado previo de tobillo por lado para filtro de delta
+const _ankleLastAng = { derecho: 0, izquierdo: 0 };
+
+function analyzeAnkle(kn, an, side) {
+  const px = kn.x - an.x;
+  const py = kn.y - an.y;
+  if (Math.hypot(px, py) < 0.02) return [null, 0];
+
+  const ang  = vecAngle([px, py], [0, -1]);
+  const last = _ankleLastAng[side];
+
+  // Descarta saltos > 12° entre frames (ruido)
+  if (Math.abs(ang - last) > 12) { _ankleLastAng[side] = last; return [null, 0]; }
+  // Descarta reposo
+  if (Math.abs(ang - last) < 2)  { return [null, 0]; }
+
+  _ankleLastAng[side] = ang;
+  if (Math.abs(px) < 0.03) return [null, 0];
+
+  if (px > 0 && ang >= THR) {
+    if (ang > PHYS.dorsiflexion_tobillo) return [null, 0];
+    return ['dorsiflexion_tobillo', ang];
+  }
+  if (px < 0 && ang >= THR) {
+    if (ang > PHYS.flexion_plantar_tobillo) return [null, 0];
+    return ['flexion_plantar_tobillo', ang];
+  }
+  return [null, 0];
+}
+
+// ── ESTADO ───────────────────────────────────────────────────────────────────
+function localISO(d = new Date()) {
+  return d.toLocaleString('sv-SE').replace('T', ' ');
+}
+const SIDES  = ['derecho', 'izquierdo'];
+const JOINTS = ['hombro', 'codo', 'cadera', 'rodilla', 'tobillo'];
+const J_SUP  = ['hombro', 'codo'];
+const J_INF  = ['cadera', 'rodilla', 'tobillo'];
+const COLS   = { hombro: 'var(--blue)', codo: 'var(--cyan)', cadera: 'var(--orange)', rodilla: 'var(--green)', tobillo: 'var(--purple)' };
+
+function mkState() {
+  const s = {};
+  for (const side of SIDES) {
+    s[side] = {};
+    for (const j of JOINTS)
+      s[side][j] = { buf: [], angle: 0, max: 0, min: null, stableCount: 0, lastEx: '', exercise: 'reposo' };
+  }
   return s;
 }
-function mkMovs(){
-  const m={};
-  for(const side of SIDES) for(const j of JOINTS) m[`${j}_${side}`]={};
+function mkMovs() {
+  const m = {};
+  for (const side of SIDES) for (const j of JOINTS) m[`${j}_${side}`] = {};
   return m;
 }
-let jData=mkState(),registro=[],movs=mkMovs(),ticks=0,sesStart=null;
-function updateJoint(side,joint,ex,angle){
-  const d=jData[side][joint];
-  if(d.exercise !== ex){ d.exMax=0; d.exMin=null; d.buf=[]; }
-  d.exercise=ex; d.angle=smoothAngle(d.buf,angle);
-  if(ex!=='reposo'&&d.angle>0){
-    if(d.angle>d.exMax) d.exMax=d.angle;
-    d.exMin=d.exMin===null?d.angle:Math.min(d.exMin,d.angle);
-    if(d.angle>d.max) d.max=d.angle;         // histórico global
-    d.min=d.min===null?d.angle:Math.min(d.min,d.angle);
+
+let jData = mkState(), registro = [], movs = mkMovs(), ticks = 0, sesStart = null;
+
+function updateJoint(side, joint, ex, angle) {
+  const d = jData[side][joint];
+
+  // Reset contadores si cambia el ejercicio
+  if (d.exercise !== ex) { d.stableCount = 0; d.buf = []; }
+  d.exercise = ex;
+  d.angle = smoothAngle(d.buf, angle);
+
+  if (ex !== 'reposo' && d.angle > THR) {
+    d.stableCount++;
+
+    // Actualiza mínimo desde el primer frame válido
+    d.min = d.min === null ? d.angle : Math.min(d.min, d.angle);
+
+    // Actualiza máximo solo si el valor es estable (STABLE_FRAMES consecutivos)
+    if (d.stableCount >= STABLE_FRAMES && d.angle > d.max) {
+      d.max = d.angle;
+    }
+
+    // Registra el máximo por movimiento
+    const k = `${joint}_${side}`;
+    if (d.angle > (movs[k][ex] || 0)) movs[k][ex] = d.angle;
+  } else {
+    d.stableCount = 0;
   }
 }
-function tick(){
-  if(++ticks%30!==0) return;
-  if(!sesStart) sesStart=localISO();
-  const ts=new Date().toTimeString().slice(0,8);
-  for(const side of SIDES) for(const j of JOINTS){
-    const d=jData[side][j];
-    if(d.exercise!=='reposo'&&d.angle>0){
-      const m=META[d.exercise];
-      registro.push({timestamp:ts,lado:side,region:m.r,articulacion:j,ejercicio:d.exercise,angulo:Math.round(d.angle*100)/100});
-      const k=`${j}_${side}`;
-      movs[k][d.exercise]=Math.max(movs[k][d.exercise]||0, d.exMax); // d.angle, no d.max
+
+function tick() {
+  if (++ticks % 30 !== 0) return;
+  if (!sesStart) sesStart = localISO();
+  const ts = new Date().toTimeString().slice(0, 8);
+  for (const side of SIDES) for (const j of JOINTS) {
+    const d = jData[side][j];
+    if (d.exercise !== 'reposo' && d.angle > THR) {
+      const m = META[d.exercise];
+      registro.push({
+        timestamp: ts, lado: side, region: m.r,
+        articulacion: j, ejercicio: d.exercise,
+        angulo: Math.round(d.angle * 100) / 100
+      });
     }
   }
 }
 
-// APACHE y SQLite API,  URL de tu servicio en Render 
-const API_URL='https://backend-d2fb.onrender.com/api/sesiones.php';
-// ROM_API_KEY generado en Render
-const API_KEY='-xK9mP3qL7nR2wT8v';
-const API_H={'X-API-Key':API_KEY};
+// ── API ───────────────────────────────────────────────────────────────────────
+const API_URL = 'https://backend-d2fb.onrender.com/api/sesiones.php';
+const API_KEY = '-xK9mP3qL7nR2wT8v';
+const API_H   = { 'X-API-Key': API_KEY };
 
-async function apiGet(path=''){
-  try{const r=await fetch(API_URL+path,{headers:API_H});if(!r.ok)return null;return r.json();}
-  catch(e){console.error('[ROM] GET'+path,e);return null;}
+async function apiGet(path = '') {
+  try { const r = await fetch(API_URL + path, { headers: API_H }); if (!r.ok) return null; return r.json(); }
+  catch (e) { console.error('[ROM] GET' + path, e); return null; }
 }
-async function apiPost(body){
-  try{const r=await fetch(API_URL,{method:'POST',headers:{...API_H,'Content-Type':'text/plain'},body:JSON.stringify(body)});return r.ok;}
-  catch(e){console.error('[ROM] POST',e);return false;}
+async function apiPost(body) {
+  try { const r = await fetch(API_URL, { method: 'POST', headers: { ...API_H, 'Content-Type': 'text/plain' }, body: JSON.stringify(body) }); return r.ok; }
+  catch (e) { console.error('[ROM] POST', e); return false; }
 }
-async function apiPatch(id,body){
-  try{const r=await fetch(`${API_URL}?id=${id}`,{method:'PATCH',headers:{...API_H,'Content-Type':'text/plain'},body:JSON.stringify(body)});return r.ok;}
-  catch(e){console.error('[ROM] PATCH',e);return false;}
+async function apiPatch(id, body) {
+  try { const r = await fetch(`${API_URL}?id=${id}`, { method: 'PATCH', headers: { ...API_H, 'Content-Type': 'text/plain' }, body: JSON.stringify(body) }); return r.ok; }
+  catch (e) { console.error('[ROM] PATCH', e); return false; }
 }
-async function apiDel(id){
-  try{const r=await fetch(`${API_URL}?id=${id}`,{method:'DELETE',headers:API_H});return r.ok;}
-  catch(e){console.error('[ROM] DELETE',e);return false;}
-}
-
-// Apache HTTP Server, PHP, SQLite
-async function loadAll(){const d=await apiGet();return Array.isArray(d)?d:[];}
-async function nextId(){const d=await apiGet('?maxid=1');return d?String((d.maxId||0)+1):'1';}
-async function saveSession(){
-  const sid=await nextId(),now=localISO();
-  const maxMin={};
-  for(const side of SIDES) for(const j of JOINTS){
-    const d=jData[side][j];
-    maxMin[`${j}_${side}`]={max:Math.round(d.max*100)/100,min:d.min!==null?Math.round(d.min*100)/100:null};
-  }
-  const ses={id:sid,inicio:sesStart||now,fin:now,paciente:'',notas:'',tipo:'gonio_fullbody',
-    max_min:maxMin,movimientos_detectados:JSON.parse(JSON.stringify(movs)),registro:[...registro]};
-  const ok=await apiPost(ses);
-  if(!ok){toast('⚠ Error al guardar');return;}
-  registro=[];movs=mkMovs();sesStart=null;
-  const fl=document.getElementById('flash');
-  fl.classList.add('show');setTimeout(()=>fl.classList.remove('show'),300);
-  toast(`✓ Sesión #${sid} guardada`,true);renderSesList();
-}
-function resetSession(){jData=mkState();registro=[];movs=mkMovs();sesStart=null;ticks=0;_ankleLastAng.derecho=0;_ankleLastAng.izquierdo=0;toast('🔄 Reset completo');}
-async function updateSes(id,p,n){await apiPatch(id,{paciente:p,notas:n});}
-async function deleteSes(id){await apiDel(id);renderSesList();toast('Sesión eliminada');}
-async function exportSes(id){
-  const all=await loadAll();
-  const s=all.find(x=>x.id===id);if(!s)return;
-  const name=s.paciente?`sesion_${s.id}_${s.paciente.replace(/\s+/g,'_')}.json`:`sesion_${s.id}.json`;
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([JSON.stringify(s,null,4)],{type:'application/json'}));
-  a.download=name;a.click();
-}
-function importJSON(inp){
-  const f=inp.files[0];if(!f)return;
-  const r=new FileReader();
-  r.onload=async e=>{
-    try{
-      const d=JSON.parse(e.target.result);if(!d.id)throw 0;
-      const all=await loadAll();
-      if(all.find(s=>s.id===d.id)){toast('⚠ Sesión ya existe');return;}
-      const ok=await apiPost(d);
-      if(ok){renderSesList();toast('✓ Sesión importada',true);}else{toast('⚠ Error al importar');}
-    }catch{toast('⚠ Archivo inválido');}
-  };
-  r.readAsText(f);inp.value='';
+async function apiDel(id) {
+  try { const r = await fetch(`${API_URL}?id=${id}`, { method: 'DELETE', headers: API_H }); return r.ok; }
+  catch (e) { console.error('[ROM] DELETE', e); return false; }
 }
 
-// MEDIAPIPE 
-const vid=document.getElementById('vid');
-const cvs=document.getElementById('cvs');
-const ctx=cvs.getContext('2d');
-let pose,cameraOn=false,poseReady=false,facingMode='user';
-function onResults(res){
-  ctx.clearRect(0,0,cvs.width,cvs.height);
-  const lm=res.poseLandmarks;
-  if(lm&&lm.length>0){
-    setStatus('on','Detectando');
-    ctx.save();
-    if(facingMode==='user'){ctx.translate(cvs.width,0);ctx.scale(-1,1);}
-    if(window.drawConnectors&&window.POSE_CONNECTIONS){
-      drawConnectors(ctx,lm,POSE_CONNECTIONS,{color:'rgba(30,60,200,0.85)',lineWidth:3});
-      drawLandmarks(ctx,lm,{color:'#00e5cc',fillColor:'#00e5cc',lineWidth:1,radius:5});
-    }
-    ctx.restore();
+async function loadAll() { const d = await apiGet(); return Array.isArray(d) ? d : []; }
+async function nextId()  { const d = await apiGet('?maxid=1'); return d ? String((d.maxId || 0) + 1) : '1'; }
 
-    const map={
-      derecho:  {sh:lm[12],el:lm[14],wr:lm[16],hip:lm[24],kn:lm[26],an:lm[28]},
-      izquierdo:{sh:lm[11],el:lm[13],wr:lm[15],hip:lm[23],kn:lm[25],an:lm[27]},
+async function saveSession() {
+  const sid = await nextId(), now = localISO();
+  const maxMin = {};
+  for (const side of SIDES) for (const j of JOINTS) {
+    const d = jData[side][j];
+    maxMin[`${j}_${side}`] = {
+      max: Math.round(d.max * 100) / 100,
+      min: d.min !== null ? Math.round(d.min * 100) / 100 : null
     };
-
-    for(const side of SIDES){
-      const p=map[side];
-      const vis=k=>(p[k].visibility||0)>VIS;
-
-      // Hombro
-      if(vis('sh')&&vis('el')&&vis('hip')){
-        const [ex,ang]=analyzeShoulder(p.sh,p.el,p.hip);
-        updateJoint(side,'hombro',ex||'reposo',ang);
-      }
-      // Codo
-      if(vis('sh')&&vis('el')&&vis('wr')){
-        const [ex,ang]=analyzeElbow(p.sh,p.el,p.wr);
-        updateJoint(side,'codo',ex||'reposo',ang);
-      }
-      // Cadera
-      if(vis('sh')&&vis('hip')&&vis('kn')){
-        const [ex,ang]=analyzeHip(p.sh,p.hip,p.kn,side);
-        updateJoint(side,'cadera',ex||'reposo',ang);
-      }
-      // Rodilla
-      if(vis('hip')&&vis('kn')&&vis('an')){
-        const [ex,ang]=analyzeKnee(p.hip,p.kn,p.an);
-        updateJoint(side,'rodilla',ex||'reposo',ang);
-      }
-      // Tobillo
-      if(vis('kn')&&vis('an')){
-        const [ex,ang]=analyzeAnkle(p.kn,p.an,side);
-        updateJoint(side,'tobillo',ex||'reposo',ang);
-      }
-    }
-
-    tick();
-    renderAP();
-
-  }else{
-    setStatus('warn','Sin detectar');
-    ctx.fillStyle='rgba(255,68,102,0.9)';
-    ctx.font='bold 14px JetBrains Mono,monospace';
-    ctx.textAlign='center';
-    ctx.fillText('⚠ NO SE DETECTA PERSONA',cvs.width/2,34);
-    renderAP(); // mantiene el panel visible aunque no haya persona
   }
+  // Redondea los valores de movimientos_detectados
+  const movsRounded = {};
+  for (const k of Object.keys(movs)) {
+    movsRounded[k] = {};
+    for (const [ex, val] of Object.entries(movs[k]))
+      movsRounded[k][ex] = Math.round(val * 100) / 100;
+  }
+  const ses = {
+    id: sid, inicio: sesStart || now, fin: now,
+    paciente: '', notas: '', tipo: 'gonio_fullbody',
+    max_min: maxMin,
+    movimientos_detectados: movsRounded,
+    registro: [...registro]
+  };
+  const ok = await apiPost(ses);
+  if (!ok) { toast('⚠ Error al guardar'); return; }
+  registro = []; movs = mkMovs(); sesStart = null;
+  const fl = document.getElementById('flash');
+  fl.classList.add('show'); setTimeout(() => fl.classList.remove('show'), 300);
+  toast(`✓ Sesión #${sid} guardada`, true);
+  renderSesList();
 }
-async function initPose(){
+
+function resetSession() {
+  jData = mkState(); registro = []; movs = mkMovs();
+  sesStart = null; ticks = 0;
+  _ankleLastAng.derecho = 0; _ankleLastAng.izquierdo = 0;
+  toast('🔄 Reset completo');
+}
+
+async function updateSes(id, p, n) { await apiPatch(id, { paciente: p, notas: n }); }
+async function deleteSes(id)       { await apiDel(id); renderSesList(); toast('Sesión eliminada'); }
+
+async function exportSes(id) {
+  const all = await loadAll();
+  const s = all.find(x => x.id === id); if (!s) return;
+  const name = s.paciente
+    ? `sesion_${s.id}_${s.paciente.replace(/\s+/g, '_')}.json`
+    : `sesion_${s.id}.json`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(s, null, 4)], { type: 'application/json' }));
+  a.download = name; a.click();
+}
+
+function importJSON(inp) {
+  const f = inp.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = async e => {
+    try {
+      const d = JSON.parse(e.target.result); if (!d.id) throw 0;
+      const all = await loadAll();
+      if (all.find(s => s.id === d.id)) { toast('⚠ Sesión ya existe'); return; }
+      const ok = await apiPost(d);
+      if (ok) { renderSesList(); toast('✓ Sesión importada', true); } else { toast('⚠ Error al importar'); }
+    } catch { toast('⚠ Archivo inválido'); }
+  };
+  r.readAsText(f); inp.value = '';
+}
+
+// ── MEDIAPIPE ─────────────────────────────────────────────────────────────────
+const vid = document.getElementById('vid');
+const cvs = document.getElementById('cvs');
+const ctx = cvs.getContext('2d');
+let pose, cameraOn = false, facingMode = 'user';
+
+function onResults(res) {
+  ctx.clearRect(0, 0, cvs.width, cvs.height);
+  const lm = res.poseLandmarks;
+  if (!lm || lm.length === 0) {
+    setStatus('warn', 'Sin detectar');
+    ctx.fillStyle = 'rgba(255,68,102,0.9)';
+    ctx.font = 'bold 14px JetBrains Mono,monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('⚠ NO SE DETECTA PERSONA', cvs.width / 2, 34);
+    renderAP();
+    return;
+  }
+  setStatus('on', 'Detectando');
+  ctx.save();
+  if (facingMode === 'user') { ctx.translate(cvs.width, 0); ctx.scale(-1, 1); }
+  if (window.drawConnectors && window.POSE_CONNECTIONS) {
+    drawConnectors(ctx, lm, POSE_CONNECTIONS, { color: 'rgba(30,60,200,0.85)', lineWidth: 3 });
+    drawLandmarks(ctx, lm, { color: '#00e5cc', fillColor: '#00e5cc', lineWidth: 1, radius: 5 });
+  }
+  ctx.restore();
+
+  const map = {
+    derecho:   { sh: lm[12], el: lm[14], wr: lm[16], hip: lm[24], kn: lm[26], an: lm[28] },
+    izquierdo: { sh: lm[11], el: lm[13], wr: lm[15], hip: lm[23], kn: lm[25], an: lm[27] },
+  };
+
+  for (const side of SIDES) {
+    const p   = map[side];
+    const vis = k => (p[k].visibility || 0) > VIS;
+
+    if (vis('sh') && vis('el') && vis('hip')) {
+      const [ex, ang] = analyzeShoulder(p.sh, p.el, p.hip);
+      updateJoint(side, 'hombro', ex || 'reposo', ang);
+    }
+    if (vis('sh') && vis('el') && vis('wr')) {
+      const [ex, ang] = analyzeElbow(p.sh, p.el, p.wr);
+      updateJoint(side, 'codo', ex || 'reposo', ang);
+    }
+    if (vis('sh') && vis('hip') && vis('kn')) {
+      const [ex, ang] = analyzeHip(p.sh, p.hip, p.kn, side);
+      updateJoint(side, 'cadera', ex || 'reposo', ang);
+    }
+    if (vis('hip') && vis('kn') && vis('an')) {
+      const [ex, ang] = analyzeKnee(p.hip, p.kn, p.an);
+      updateJoint(side, 'rodilla', ex || 'reposo', ang);
+    }
+    if (vis('kn') && vis('an')) {
+      const [ex, ang] = analyzeAnkle(p.kn, p.an, side);
+      updateJoint(side, 'tobillo', ex || 'reposo', ang);
+    }
+  }
+  tick();
+  renderAP();
+}
+
+async function initPose() {
   ldMsg('Cargando modelo de pose…');
-  pose=new Pose({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5/${f}`});
-  pose.setOptions({modelComplexity:1,smoothLandmarks:true,enableSegmentation:false,
-    smoothSegmentation:false,minDetectionConfidence:0.5,minTrackingConfidence:0.5});
+  pose = new Pose({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5/${f}` });
+  pose.setOptions({
+    modelComplexity: 1, smoothLandmarks: true,
+    enableSegmentation: false, smoothSegmentation: false,
+    minDetectionConfidence: 0.5, minTrackingConfidence: 0.5
+  });
   pose.onResults(onResults);
   ldMsg('Inicializando modelo WASM…');
   await pose.initialize();
   ldMsg('Activando cámara…');
   await startCam();
 }
-async function startCam(mode){
-  if(mode) facingMode=mode;
-  let stream=null;
-  for(const c of [{video:{facingMode:facingMode,width:{ideal:640},height:{ideal:480}}},{video:true}]){
-    try{stream=await navigator.mediaDevices.getUserMedia(c);break;}catch(e){}
+
+async function startCam(mode) {
+  if (mode) facingMode = mode;
+  let stream = null;
+  for (const c of [{ video: { facingMode, width: { ideal: 640 }, height: { ideal: 480 } } }, { video: true }]) {
+    try { stream = await navigator.mediaDevices.getUserMedia(c); break; } catch (e) {}
   }
-  if(!stream) throw new Error('No se pudo acceder a la cámara');
-  vid.srcObject=stream;
-  await new Promise(res=>{vid.onloadedmetadata=res;});
+  if (!stream) throw new Error('No se pudo acceder a la cámara');
+  vid.srcObject = stream;
+  await new Promise(res => { vid.onloadedmetadata = res; });
   await vid.play();
-  // Espejo cámara frontal
-  vid.style.transform=facingMode==='user'?'scaleX(-1)':'scaleX(1)';
-  cameraOn=true;poseReady=true;
-  document.getElementById('ld').style.opacity='0';
-  setTimeout(()=>document.getElementById('ld').style.display='none',400);
-  setStatus('warn','Buscando…');
+  vid.style.transform = facingMode === 'user' ? 'scaleX(-1)' : 'scaleX(1)';
+  cameraOn = true;
+  document.getElementById('ld').style.opacity = '0';
+  setTimeout(() => document.getElementById('ld').style.display = 'none', 400);
+  setStatus('warn', 'Buscando…');
   loop();
 }
-async function switchCam(){
-  const btn=document.getElementById('fab-flip');
-  if(btn) btn.style.pointerEvents='none';
-  cameraOn=false;
-  if(vid.srcObject) vid.srcObject.getTracks().forEach(t=>t.stop());
-  const newMode=facingMode==='user'?'environment':'user';
-  setStatus('warn','Cambiando cámara…');
-  try{
+
+async function switchCam() {
+  const btn = document.getElementById('fab-flip');
+  if (btn) btn.style.pointerEvents = 'none';
+  cameraOn = false;
+  if (vid.srcObject) vid.srcObject.getTracks().forEach(t => t.stop());
+  const newMode = facingMode === 'user' ? 'environment' : 'user';
+  setStatus('warn', 'Cambiando cámara…');
+  try {
     await startCam(newMode);
-    toast(newMode==='environment'?'📷 Cámara trasera':'🤳 Cámara frontal',true);
-  }catch(e){
-    // volver a la cámara anterior si falla
-    cameraOn=true;
+    toast(newMode === 'environment' ? '📷 Cámara trasera' : '🤳 Cámara frontal', true);
+  } catch (e) {
+    cameraOn = true;
     toast('⚠ No se pudo cambiar de cámara');
-    await startCam(facingMode==='user'?'environment':'user');
+    await startCam(facingMode === 'user' ? 'environment' : 'user');
   }
-  if(btn) btn.style.pointerEvents='';
+  if (btn) btn.style.pointerEvents = '';
 }
-async function loop(){
-  if(!cameraOn) return;
-  if(vid.readyState>=2){
-    const w=vid.videoWidth||640,h=vid.videoHeight||480;
-    if(cvs.width!==w||cvs.height!==h){cvs.width=w;cvs.height=h;}
-    try{await pose.send({image:vid});}catch(e){}
+
+async function loop() {
+  if (!cameraOn) return;
+  if (vid.readyState >= 2) {
+    const w = vid.videoWidth || 640, h = vid.videoHeight || 480;
+    if (cvs.width !== w || cvs.height !== h) { cvs.width = w; cvs.height = h; }
+    try { await pose.send({ image: vid }); } catch (e) {}
   }
   requestAnimationFrame(loop);
 }
 
-//UI:PANEL DE ÁNGULOS
-function renderAP(){
-  document.getElementById('ap-sup').innerHTML=J_SUP.flatMap(j=>SIDES.map(s=>apCard(j,s))).join('');
-  document.getElementById('ap-inf').innerHTML=J_INF.flatMap(j=>SIDES.map(s=>apCard(j,s))).join('');
+// ── UI: PANEL DE ÁNGULOS ──────────────────────────────────────────────────────
+function renderAP() {
+  document.getElementById('ap-sup').innerHTML = J_SUP.flatMap(j => SIDES.map(s => apCard(j, s))).join('');
+  document.getElementById('ap-inf').innerHTML = J_INF.flatMap(j => SIDES.map(s => apCard(j, s))).join('');
 }
-function apCard(j,side){
-  const d=jData[side][j],col=COLS[j],active=d.exercise!=='reposo';
+function apCard(j, side) {
+  const d = jData[side][j], col = COLS[j], active = d.exercise !== 'reposo';
   return `<div class="apc">
-    <div class="apc-lbl">${j.toUpperCase()}·${side==='derecho'?'D':'I'}</div>
-    <div class="apc-val" style="color:${active?col:'var(--txt3)'}">${active?Math.round(d.angle):0}<span>°</span></div>
-    <div class="apc-ex"  style="color:${active?col:'var(--txt3)'}">${active?(META[d.exercise]?.n||d.exercise):'—'}</div>
+    <div class="apc-lbl">${j.toUpperCase()}·${side === 'derecho' ? 'D' : 'I'}</div>
+    <div class="apc-val" style="color:${active ? col : 'var(--txt3)'}">
+      ${active ? Math.round(d.angle) : 0}<span>°</span>
+    </div>
+    <div class="apc-ex" style="color:${active ? col : 'var(--txt3)'}">
+      ${active ? (META[d.exercise]?.n || d.exercise) : '—'}
+    </div>
     <div class="apc-max">MAX ${Math.round(d.max)}°</div>
   </div>`;
 }
 
-//UI:SESIONES 
-let qFilter='';
-function filterSes(v){qFilter=v;renderSesList();}
-async function renderSesList(){
-  const all=await loadAll(),q=qFilter.toLowerCase();
-  const list=q?all.filter(s=>(s.paciente||'').toLowerCase().includes(q)||s.id.includes(q)):all;
-  document.getElementById('ses-count').textContent=`${list.length} sesión${list.length!==1?'es':''}`;
-  const el=document.getElementById('ses-list');
-  if(!list.length){
-    el.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-txt">${q?`Sin resultados para "${q}"`:'No hay sesiones guardadas.'}</div></div>`;
+// ── UI: SESIONES ──────────────────────────────────────────────────────────────
+let qFilter = '';
+function filterSes(v) { qFilter = v; renderSesList(); }
+async function renderSesList() {
+  const all = await loadAll(), q = qFilter.toLowerCase();
+  const list = q ? all.filter(s => (s.paciente || '').toLowerCase().includes(q) || s.id.includes(q)) : all;
+  document.getElementById('ses-count').textContent = `${list.length} sesión${list.length !== 1 ? 'es' : ''}`;
+  const el = document.getElementById('ses-list');
+  if (!list.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-txt">${q ? `Sin resultados para "${q}"` : 'No hay sesiones guardadas.'}</div></div>`;
     return;
   }
-  el.innerHTML=list.map(s=>`
+  el.innerHTML = list.map(s => `
     <div class="si" onclick="openDet('${s.id}')">
       <div class="si-top"><span class="si-id">Sesión #${s.id}</span><span class="si-arr">›</span></div>
-      <div class="si-name ${!s.paciente?'empty':''}">${s.paciente||'Sin paciente asignado'}</div>
-      <div class="si-date">${(s.inicio||'—').slice(0,16)}</div>
+      <div class="si-name ${!s.paciente ? 'empty' : ''}">${s.paciente || 'Sin paciente asignado'}</div>
+      <div class="si-date">${(s.inicio || '—').slice(0, 16)}</div>
     </div>`).join('');
 }
 
-//UI: DETALLE
-let detId=null,formOpen=false;
-async function openDet(id){detId=id;formOpen=false;document.getElementById('det-title').textContent=`Sesión #${id}`;await renderDet();goScreen('det');}
-async function renderDet(){
-  const s=(await loadAll()).find(x=>x.id===detId);if(!s)return;
-  function jCard(j,side){
-    const k=`${j}_${side}`,d=s.max_min?.[k]||{max:0,min:0},col=COLS[j];
-    //const entries=Object.entries(s.movimientos_detectados?.[k]||{});
-    const raw=s.movimientos_detectados?.[k];
-    const entries=Object.entries(raw&&!Array.isArray(raw)?raw:{});
+// ── UI: DETALLE ───────────────────────────────────────────────────────────────
+let detId = null, formOpen = false;
+async function openDet(id) {
+  detId = id; formOpen = false;
+  document.getElementById('det-title').textContent = `Sesión #${id}`;
+  await renderDet(); goScreen('det');
+}
+async function renderDet() {
+  const s = (await loadAll()).find(x => x.id === detId); if (!s) return;
+
+  function jCard(j, side) {
+    const k    = `${j}_${side}`;
+    const d    = s.max_min?.[k] || { max: 0, min: null };
+    const col  = COLS[j];
+    const raw  = s.movimientos_detectados?.[k];
+    const entries = Object.entries(raw && !Array.isArray(raw) ? raw : {});
     return `<div class="jcard">
-      <div class="jcard-ttl"><span class="dot2" style="background:${col}"></span>${j.toUpperCase()} · ${side==='derecho'?'DER.':'IZQ.'}</div>
+      <div class="jcard-ttl"><span class="dot2" style="background:${col}"></span>${j.toUpperCase()} · ${side === 'derecho' ? 'DER.' : 'IZQ.'}</div>
       <div class="jbody">
-        <div><div class="jval-lbl">Máximo</div><div class="jval-num" style="color:${col}">${(d.max||0).toFixed(0)}</div><div class="jval-unit">grados</div></div>
-        <div><div class="jval-lbl">Mínimo act.</div><div class="jval-num">${d.min!==null?d.min.toFixed(0):'—'}</div><div class="jval-unit">grados</div></div>
+        <div><div class="jval-lbl">Máximo</div><div class="jval-num" style="color:${col}">${(d.max || 0).toFixed(1)}</div><div class="jval-unit">grados</div></div>
+        <div><div class="jval-lbl">Mínimo act.</div><div class="jval-num">${d.min !== null && d.min !== undefined ? parseFloat(d.min).toFixed(1) : '—'}</div><div class="jval-unit">grados</div></div>
       </div>
-      ${entries.length?`<div class="divider"></div>${entries.map(([ex,a])=>`<div class="mv-row"><div class="mv-name">${ex.replace(/_/g,' ')}</div><div class="mv-ang" style="color:${col}">${parseFloat(a).toFixed(0)}°</div></div>`).join('')}`:''}
+      ${entries.length ? `<div class="divider"></div>${entries.map(([ex, a]) =>
+        `<div class="mv-row">
+          <div class="mv-name">${ex.replace(/_/g, ' ')}</div>
+          <div class="mv-ang" style="color:${col}">${parseFloat(a).toFixed(1)}°</div>
+        </div>`).join('')}` : ''}
     </div>`;
   }
-  const regs=s.registro||[];
-  document.getElementById('det-body').innerHTML=`
+
+  const regs = s.registro || [];
+  document.getElementById('det-body').innerHTML = `
     <div class="shd-card">
       <div class="snum"><span class="snum-l">SES</span><span class="snum-v">#${s.id}</span></div>
       <div class="sinfo">
-        <div class="sname ${!s.paciente?'empty':''}">${s.paciente||'Sin paciente asignado'}</div>
-        <div class="sdates">${(s.inicio||'—').slice(0,16)}${s.fin?' → '+(s.fin||'').slice(11,16):''}</div>
-        ${s.notas?`<div class="snotes">${s.notas}</div>`:''}
+        <div class="sname ${!s.paciente ? 'empty' : ''}">${s.paciente || 'Sin paciente asignado'}</div>
+        <div class="sdates">${(s.inicio || '—').slice(0, 16)}${s.fin ? ' → ' + (s.fin || '').slice(11, 16) : ''}</div>
+        ${s.notas ? `<div class="snotes">${s.notas}</div>` : ''}
       </div>
     </div>
-    ${formOpen?`<div class="aform">
+    ${formOpen ? `<div class="aform">
       <div class="aform-title">Asignar paciente — Sesión #${s.id}</div>
-      <div class="field"><label>Nombre</label><input type="text" id="fn" value="${s.paciente||''}" placeholder="Ej: Carlos Mendoza"></div>
-      <div class="field"><label>Notas clínicas</label><textarea id="fno" placeholder="Diagnóstico, observaciones…">${s.notas||''}</textarea></div>
+      <div class="field"><label>Nombre</label><input type="text" id="fn" value="${s.paciente || ''}" placeholder="Ej: Carlos Mendoza"></div>
+      <div class="field"><label>Notas clínicas</label><textarea id="fno" placeholder="Diagnóstico, observaciones…">${s.notas || ''}</textarea></div>
       <div class="btn-row">
         <button class="btn btn-p" onclick="guardar('${s.id}')">Guardar</button>
         <button class="btn btn-g" onclick="toggleForm()">Cancelar</button>
       </div>
-    </div>`:''}
+    </div>` : ''}
     <div class="tabs-row">
       <div class="tab on" id="tb-sup" onclick="detTab('sup')">Tren Superior</div>
       <div class="tab"    id="tb-inf" onclick="detTab('inf')">Tren Inferior</div>
       <div class="tab"    id="tb-reg" onclick="detTab('reg')">Registro</div>
     </div>
     <div class="tc on" id="tc-sup"><div class="jgrid">
-      ${jCard('hombro','derecho')}${jCard('hombro','izquierdo')}
-      ${jCard('codo','derecho')}${jCard('codo','izquierdo')}
+      ${jCard('hombro', 'derecho')}${jCard('hombro', 'izquierdo')}
+      ${jCard('codo',   'derecho')}${jCard('codo',   'izquierdo')}
     </div></div>
     <div class="tc" id="tc-inf"><div class="jgrid">
-      ${jCard('cadera','derecho')}${jCard('cadera','izquierdo')}
-      ${jCard('rodilla','derecho')}${jCard('rodilla','izquierdo')}
-      ${jCard('tobillo','derecho')}${jCard('tobillo','izquierdo')}
+      ${jCard('cadera',  'derecho')}${jCard('cadera',  'izquierdo')}
+      ${jCard('rodilla', 'derecho')}${jCard('rodilla', 'izquierdo')}
+      ${jCard('tobillo', 'derecho')}${jCard('tobillo', 'izquierdo')}
     </div></div>
     <div class="tc" id="tc-reg">
       ${regs.length
-        ?`<div class="tbl-wrap"><table>
+        ? `<div class="tbl-wrap"><table>
             <thead><tr><th>Hora</th><th>Lado</th><th>Región</th><th>Articulación</th><th>Ejercicio</th><th>Ángulo</th></tr></thead>
-            <tbody>${regs.map(r=>`<tr>
-              <td><span class="badge">${r.timestamp}</span></td><td>${r.lado}</td>
-              <td><span class="${r.region==='superior'?'rt-sup':'rt-inf'}">${r.region}</span></td>
-              <td>${r.articulacion}</td><td>${r.ejercicio.replace(/_/g,' ')}</td>
+            <tbody>${regs.map(r => `<tr>
+              <td><span class="badge">${r.timestamp}</span></td>
+              <td>${r.lado}</td>
+              <td><span class="${r.region === 'superior' ? 'rt-sup' : 'rt-inf'}">${r.region}</span></td>
+              <td>${r.articulacion}</td>
+              <td>${r.ejercicio.replace(/_/g, ' ')}</td>
               <td style="color:var(--cyan);font-family:var(--mono);font-weight:600">${r.angulo}°</td>
             </tr>`).join('')}</tbody>
           </table></div>`
-        :`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-txt">Sin registros</div></div>`}
+        : `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-txt">Sin registros</div></div>`}
     </div>`;
-  document.getElementById('det-acts').innerHTML=`
+
+  document.getElementById('det-acts').innerHTML = `
     <button class="btn btn-g" onclick="toggleForm()" style="flex:1">✏️ Asignar</button>
     <button class="btn btn-p" onclick="exportSes('${s.id}')" style="flex:1">⬇️ Exportar</button>
     <button class="btn btn-d" onclick="confirmDel('${s.id}')">🗑️</button>`;
 }
-function detTab(n){
-  ['sup','inf','reg'].forEach(x=>{
-    document.getElementById('tc-'+x).classList.toggle('on',x===n);
-    document.getElementById('tb-'+x).classList.toggle('on',x===n);
+
+function detTab(n) {
+  ['sup', 'inf', 'reg'].forEach(x => {
+    document.getElementById('tc-' + x).classList.toggle('on', x === n);
+    document.getElementById('tb-' + x).classList.toggle('on', x === n);
   });
 }
-function toggleForm(){formOpen=!formOpen;renderDet();}
-async function guardar(id){
-  await updateSes(id,document.getElementById('fn').value.trim(),document.getElementById('fno').value.trim());
-  formOpen=false;await renderDet();renderSesList();toast('✓ Paciente asignado',true);
+function toggleForm() { formOpen = !formOpen; renderDet(); }
+async function guardar(id) {
+  await updateSes(id, document.getElementById('fn').value.trim(), document.getElementById('fno').value.trim());
+  formOpen = false; await renderDet(); renderSesList(); toast('✓ Paciente asignado', true);
 }
-async function confirmDel(id){if(confirm(`¿Borrar sesión #${id}?`)){await deleteSes(id);goBack();}}
+async function confirmDel(id) { if (confirm(`¿Borrar sesión #${id}?`)) { await deleteSes(id); goBack(); } }
 
-//NAVEGACIÓN 
-let curScreen='cam';
-function goScreen(name){
-  ['cam','ses','det'].forEach(s=>document.getElementById('sc-'+s).classList.toggle('off',s!==name));
-  document.getElementById('nb-cam').classList.toggle('on',name==='cam');
-  document.getElementById('nb-ses').classList.toggle('on',name==='ses'||name==='det');
-  document.getElementById('botnav').classList.toggle('off',name==='det');
-  if(name==='ses') renderSesList();
-  curScreen=name;
+// ── NAVEGACIÓN ────────────────────────────────────────────────────────────────
+let curScreen = 'cam';
+function goScreen(name) {
+  ['cam', 'ses', 'det'].forEach(s => document.getElementById('sc-' + s).classList.toggle('off', s !== name));
+  document.getElementById('nb-cam').classList.toggle('on', name === 'cam');
+  document.getElementById('nb-ses').classList.toggle('on', name === 'ses' || name === 'det');
+  document.getElementById('botnav').classList.toggle('off', name === 'det');
+  if (name === 'ses') renderSesList();
+  curScreen = name;
 }
-function goBack(){goScreen(curScreen==='det'?'ses':'cam');}
+function goBack() { goScreen(curScreen === 'det' ? 'ses' : 'cam'); }
 
-// NOTIFICACIONES
+// ── UTILIDADES ────────────────────────────────────────────────────────────────
 let tTimer;
-function toast(msg,green=false){
-  const el=document.getElementById('toast');
-  el.textContent=msg;el.className='show'+(green?' g':'');
-  clearTimeout(tTimer);tTimer=setTimeout(()=>el.className='',2500);
+function toast(msg, green = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'show' + (green ? ' g' : '');
+  clearTimeout(tTimer); tTimer = setTimeout(() => el.className = '', 2500);
 }
-function ldMsg(m){document.getElementById('ld-msg').textContent=m;}
-function setStatus(state,txt){
-  document.getElementById('sDot').className='dot'+(state==='on'?' on':state==='warn'?' warn':'');
-  document.getElementById('sTxt').textContent=txt;
+function ldMsg(m) { document.getElementById('ld-msg').textContent = m; }
+function setStatus(state, txt) {
+  document.getElementById('sDot').className = 'dot' + (state === 'on' ? ' on' : state === 'warn' ? ' warn' : '');
+  document.getElementById('sTxt').textContent = txt;
 }
-document.addEventListener('keydown',e=>{
-  if(e.key==='s'||e.key==='S') saveSession();
-  if(e.key==='r'||e.key==='R') resetSession();
+
+document.addEventListener('keydown', e => {
+  if (e.key === 's' || e.key === 'S') saveSession();
+  if (e.key === 'r' || e.key === 'R') resetSession();
 });
 
-//INICIO
-document.getElementById('ld').style.transition='opacity .4s';
-if(location.protocol!=='https:'&&location.hostname!=='localhost'&&location.hostname!=='127.0.0.1'){
-  document.getElementById('ld').style.display='none';
-  document.getElementById('https-err').style.display='flex';
-}else{
-  window.addEventListener('load',()=>setTimeout(initPose,300));
+// ── INICIO ────────────────────────────────────────────────────────────────────
+document.getElementById('ld').style.transition = 'opacity .4s';
+if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+  document.getElementById('ld').style.display = 'none';
+  document.getElementById('https-err').style.display = 'flex';
+} else {
+  window.addEventListener('load', () => setTimeout(initPose, 300));
 }
 </script>
 </body>
