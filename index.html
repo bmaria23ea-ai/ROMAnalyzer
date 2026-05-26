@@ -493,6 +493,7 @@ function analyzeHip(sh, hip, kn, side) {
   const leg   = [kn.x - hip.x, kn.y - hip.y];
   const va = vecAngle(trunk, leg);
   const trunkAng = vecAngle(trunk, [0, -1]);
+  document.title = `va=${va.toFixed(1)} fx=${Math.max(0,168-va).toFixed(1)} | ${side}`;
 
   const NEUTRAL_HIP = 168;
   const pureFlex  = Math.max(0, NEUTRAL_HIP - va);
