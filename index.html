@@ -489,12 +489,13 @@ function analyzeHip(sh,hip,kn,side){
   const leg  =[kn.x-hip.x,kn.y-hip.y];
   // Flexión: rodilla sube por encima de la cadera: ángulo entre tronco y pierna
   const va=vecAngle(trunk,leg);
-  const flex=kn.y<hip.y-0.05?Math.min(va,125):0;
+  //flexión cuando la rodilla está hasta 0.10 unidades por debajo de la cadera
+  const flex = (kn.y < hip.y + 0.10 && va > THR) ? Math.min(va,125) : 0;
   // Extensión: rodilla por debajo y algo lateral: complemento del ángulo tronco-pierna
   const ext=(kn.y>hip.y&&Math.abs(kn.x-hip.x)>Math.abs(kn.y-hip.y)*0.2)?Math.min(180-va,30):0;
   // Abducción: desplazamiento lateral del knee respecto a la cadera
   let abd=0;
-  if(Math.abs(kn.x-hip.x)>Math.abs(kn.y-hip.y)*0.5){
+  if(Math.abs(kn.x-hip.x)>Math.abs(kn.y-hip.y)*0.8){
     if(side==='derecho'  &&kn.x<hip.x) abd=Math.min(va,45);
     if(side==='izquierdo'&&kn.x>hip.x) abd=Math.min(va,45);
   }
