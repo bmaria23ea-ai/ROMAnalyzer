@@ -484,30 +484,24 @@ function analyzeElbow(sh,el,wr){
   return [null,0];
 }
 function analyzeHip(sh,hip,kn,side){
-  // Vector tronco: desde cadera hacia hombro (dirección real del segmento)
-  const trunk=[sh.x-hip.x,sh.y-hip.y];
-  const leg  =[kn.x-hip.x,kn.y-hip.y];
-  // Flexión: rodilla sube por encima de la cadera: ángulo entre tronco y pierna
+  const trunk=[sh.x-hip.x,sh.y-hip.y],leg=[kn.x-hip.x,kn.y-hip.y];
   const va=vecAngle(trunk,leg);
-  //flexión cuando la rodilla está hasta 0.10 unidades por debajo de la cadera
-  const flex = (kn.y < hip.y + 0.10 && va > THR) ? Math.min(va,125) : 0;
-  // Extensión: rodilla por debajo y algo lateral: complemento del ángulo tronco-pierna
+  const vertical=[0,-1];
+  const trunkAng=vecAngle(trunk,vertical);
+  // Flexión pura: rodilla sobre cadera
+  const pureFlex=hip.y-kn.y>0.02?Math.min(va,125):0;
+  // Flexión sentadilla: tronco inclinado + rodilla abajo
+  const squatFlex=(trunkAng>10&&kn.y>hip.y)?Math.min(trunkAng*2.5,125):0;
+  const flex=Math.max(pureFlex,squatFlex);
   const ext=(kn.y>hip.y&&Math.abs(kn.x-hip.x)>Math.abs(kn.y-hip.y)*0.2)?Math.min(180-va,30):0;
-  // Abducción: desplazamiento lateral del knee respecto a la cadera
   let abd=0;
   if(Math.abs(kn.x-hip.x)>Math.abs(kn.y-hip.y)*0.8){
-    if(side==='derecho'  &&kn.x<hip.x) abd=Math.min(va,45);
+    if(side==='derecho'&&kn.x<hip.x) abd=Math.min(va,45);
     if(side==='izquierdo'&&kn.x>hip.x) abd=Math.min(va,45);
   }
-  // Prioridad cuando flex supera el techo de abduccióna
-  // Flexión tiene prioridad si supera umbral base
-  if(flex>THR&&flex>=ext&&flex>=abd) return ['flexion_cadera', Math.min(flex,125)];
-  if(ext>THR&&ext>abd)               return ['extension_cadera', Math.min(ext,30)];
-  if(abd>THR)                        return ['abduccion_cadera', Math.min(abd,45)];
-  //if(flex>45&&flex>ext)            return ['flexion_cadera',flex];
-  //if(flex>THR&&flex>abd&&flex>ext) return ['flexion_cadera',flex];
-  //if(ext>THR&&ext>abd)             return ['extension_cadera',ext];
-  //if(abd>THR)                      return ['abduccion_cadera',abd];
+  if(flex>THR&&flex>=ext&&flex>=abd) return ['flexion_cadera',Math.min(flex,125)];
+  if(ext>THR&&ext>abd)               return ['extension_cadera',Math.min(ext,30)];
+  if(abd>THR)                        return ['abduccion_cadera',Math.min(abd,45)];
   return [null,0];
 }
 function analyzeKnee(hip,kn,an){
