@@ -601,8 +601,8 @@ function updateJoint(side, joint, ex, angle) {
   // mínimo y máximo solo con valores estables
   if (d.stableCount >= STABLE_FRAMES) {
     d.min = d.min === null ? d.angle : Math.min(d.min, d.angle);
-    if (d.angle > d.max) d.max = d.angle;
   }
+  if (d.angle > d.max) d.max = d.angle;
     // Registra el máximo por movimiento
     const k = `${joint}_${side}`;
     if (d.angle > (movs[k][ex] || 0)) movs[k][ex] = d.angle;
