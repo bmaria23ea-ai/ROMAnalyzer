@@ -498,11 +498,15 @@ function analyzeHip(sh,hip,kn,side){
     if(side==='derecho'  &&kn.x<hip.x) abd=Math.min(va,45);
     if(side==='izquierdo'&&kn.x>hip.x) abd=Math.min(va,45);
   }
-  // Prioridad cuando flex supera el techo de abducción
-  if(flex>45&&flex>ext)            return ['flexion_cadera',flex];
-  if(flex>THR&&flex>abd&&flex>ext) return ['flexion_cadera',flex];
-  if(ext>THR&&ext>abd)             return ['extension_cadera',ext];
-  if(abd>THR)                      return ['abduccion_cadera',abd];
+  // Prioridad cuando flex supera el techo de abduccióna
+  // Flexión tiene prioridad si supera umbral base
+  if(flex>THR&&flex>=ext&&flex>=abd) return ['flexion_cadera', Math.min(flex,125)];
+  if(ext>THR&&ext>abd)               return ['extension_cadera', Math.min(ext,30)];
+  if(abd>THR)                        return ['abduccion_cadera', Math.min(abd,45)];
+  //if(flex>45&&flex>ext)            return ['flexion_cadera',flex];
+  //if(flex>THR&&flex>abd&&flex>ext) return ['flexion_cadera',flex];
+  //if(ext>THR&&ext>abd)             return ['extension_cadera',ext];
+  //if(abd>THR)                      return ['abduccion_cadera',abd];
   return [null,0];
 }
 function analyzeKnee(hip,kn,an){
@@ -527,9 +531,9 @@ function analyzeAnkle(kn, an, side){
   // Filtro de coherencia: descarta saltos > 15° entre frames
   const last = _ankleLastAng[side] ?? 0;
   if(Math.abs(ang - last) > 15){ _ankleLastAng[side] = last; return [null, 0]; }
-  _ankleLastAng[side] = ang;
   const delta = Math.abs(ang - last);//REDUNDAN
-  //if(delta > 15) { _ankleLastAng[side] = last; return [null, 0]; } // ruido
+  _ankleLastAng[side] = ang;
+    //if(delta > 15) { _ankleLastAng[side] = last; return [null, 0]; } // ruido
   if(delta < 2)  { return [null, 0]; }  // demasiado quieto → reposo
   // px > 0 significa que el tobillo está adelantado respecto a la rodilla= dorsiflexión
   // px < 0 significa que el tobillo está detrás de la rodilla= flexión plantar
@@ -581,7 +585,7 @@ function tick(){
       const m=META[d.exercise];
       registro.push({timestamp:ts,lado:side,region:m.r,articulacion:j,ejercicio:d.exercise,angulo:Math.round(d.angle*100)/100});
       const k=`${j}_${side}`;
-      movs[k][d.exercise]=Math.max(movs[k][d.exercise]||0, d.angle); // d.angle, no d.max
+      movs[k][d.exercise]=Math.max(movs[k][d.exercise]||0, d.max); // d.angle, no d.max
     }
   }
 }
