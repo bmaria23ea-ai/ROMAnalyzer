@@ -491,7 +491,7 @@ function analyzeHip(sh,hip,kn,side){
   // Flexión pura: rodilla sobre cadera
   const pureFlex=hip.y-kn.y>0.02?Math.min(va,125):0;
   // Flexión sentadilla: tronco inclinado + rodilla abajo
-  const squatFlex=(trunkAng>10&&kn.y>hip.y)?Math.min(trunkAng*2.5,125):0;
+  const squatFlex=(trunkAng>5&&kn.y>hip.y)?Math.min(trunkAng*2.5,125):0;
   const flex=Math.max(pureFlex,squatFlex);
   const ext=(kn.y>hip.y&&Math.abs(kn.x-hip.x)>Math.abs(kn.y-hip.y)*0.2)?Math.min(180-va,30):0;
   let abd=0;
