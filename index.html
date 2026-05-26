@@ -494,7 +494,8 @@ function analyzeHip(sh, hip, kn, side) {
   const va = vecAngle(trunk, leg);
   const trunkAng = vecAngle(trunk, [0, -1]);
 
-  const pureFlex  = hip.y - kn.y > 0.02 ? va : 0;
+  const NEUTRAL_HIP = 168;
+  const pureFlex  = Math.max(0, NEUTRAL_HIP - va);
   const squatFlex = trunkAng > 8 && kn.y > hip.y ? trunkAng * 2.5 : 0;
   const flex = Math.max(pureFlex, squatFlex);
   const ext  = kn.y > hip.y && Math.abs(kn.x - hip.x) > Math.abs(kn.y - hip.y) * 0.2 ? 180 - va : 0;
@@ -505,7 +506,7 @@ function analyzeHip(sh, hip, kn, side) {
     if (side === 'izquierdo' && kn.x > hip.x) abd = va;
   }
 
-  if (flex > THR && flex >= ext && flex >= abd) {
+  if (flex > 18 && flex >= ext && flex >= abd) {
     if (flex > PHYS.flexion_cadera) return [null, 0];
     return ['flexion_cadera', flex];
   }
