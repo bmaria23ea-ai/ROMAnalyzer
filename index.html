@@ -558,8 +558,9 @@ const COLS={hombro:'var(--blue)',codo:'var(--cyan)',cadera:'var(--orange)',rodil
 function mkState(){
   const s={};
   for(const side of SIDES){s[side]={};
-    for(const j of JOINTS) s[side][j]={buf:[],angle:0,max:0,min:null,exercise:'reposo'};
-  }
+    for(const j of JOINTS)
+      s[side][j]={buf:[],angle:0,max:0,min:null,exMax:0,exMin:null,exercise:'reposo'};
+  }  
   return s;
 }
 function mkMovs(){
@@ -570,14 +571,15 @@ function mkMovs(){
 let jData=mkState(),registro=[],movs=mkMovs(),ticks=0,sesStart=null;
 function updateJoint(side,joint,ex,angle){
   const d=jData[side][joint];
-  //d.exercise=ex; d.angle=smoothAngle(d.buf,angle);
-  if(d.exercise !== ex){ d.max=0; d.min=null; d.buf=[]; }
+  if(d.exercise !== ex){ d.exMax=0; d.exMin=null; d.buf=[]; }
   d.exercise=ex; d.angle=smoothAngle(d.buf,angle);
-  if(ex!=='reposo'&&d.angle>0){            // usa d.angle para ambos
-    if(d.angle>d.max) d.max=d.angle;
-    d.min=d.min===null?d.angle:Math.min(d.min,d.angle); // consistente
+  if(ex!=='reposo'&&d.angle>0){
+    if(d.angle>d.exMax) d.exMax=d.angle;
+    d.exMin=d.exMin===null?d.angle:Math.min(d.exMin,d.angle);
+    if(d.angle>d.max) d.max=d.angle;         // histórico global
+    d.min=d.min===null?d.angle:Math.min(d.min,d.angle);
   }
-}  
+}
 function tick(){
   if(++ticks%30!==0) return;
   if(!sesStart) sesStart=localISO();
@@ -588,7 +590,7 @@ function tick(){
       const m=META[d.exercise];
       registro.push({timestamp:ts,lado:side,region:m.r,articulacion:j,ejercicio:d.exercise,angulo:Math.round(d.angle*100)/100});
       const k=`${j}_${side}`;
-      movs[k][d.exercise]=Math.max(movs[k][d.exercise]||0, d.max); // d.angle, no d.max
+      movs[k][d.exercise]=Math.max(movs[k][d.exercise]||0, d.exMax); // d.angle, no d.max
     }
   }
 }
