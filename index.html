@@ -570,6 +570,8 @@ function mkMovs(){
 let jData=mkState(),registro=[],movs=mkMovs(),ticks=0,sesStart=null;
 function updateJoint(side,joint,ex,angle){
   const d=jData[side][joint];
+  //d.exercise=ex; d.angle=smoothAngle(d.buf,angle);
+  if(d.exercise !== ex){ d.max=0; d.min=null; d.buf=[]; }
   d.exercise=ex; d.angle=smoothAngle(d.buf,angle);
   if(ex!=='reposo'&&d.angle>0){            // usa d.angle para ambos
     if(d.angle>d.max) d.max=d.angle;
@@ -824,7 +826,9 @@ async function renderDet(){
   const s=(await loadAll()).find(x=>x.id===detId);if(!s)return;
   function jCard(j,side){
     const k=`${j}_${side}`,d=s.max_min?.[k]||{max:0,min:0},col=COLS[j];
-    const entries=Object.entries(s.movimientos_detectados?.[k]||{});
+    //const entries=Object.entries(s.movimientos_detectados?.[k]||{});
+    const raw=s.movimientos_detectados?.[k];
+    const entries=Object.entries(raw&&!Array.isArray(raw)?raw:{});
     return `<div class="jcard">
       <div class="jcard-ttl"><span class="dot2" style="background:${col}"></span>${j.toUpperCase()} · ${side==='derecho'?'DER.':'IZQ.'}</div>
       <div class="jbody">
