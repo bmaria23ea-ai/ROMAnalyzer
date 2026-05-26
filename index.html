@@ -493,13 +493,12 @@ function analyzeHip(sh, hip, kn, side) {
   const leg   = [kn.x - hip.x, kn.y - hip.y];
   const va = vecAngle(trunk, leg);
   const trunkAng = vecAngle(trunk, [0, -1]);
-  document.title = `va=${va.toFixed(1)} fx=${Math.max(0,168-va).toFixed(1)} | ${side}`;
 
-  const NEUTRAL_HIP = 168;
-  const pureFlex  = Math.max(0, NEUTRAL_HIP - va);
-  const squatFlex = trunkAng > 8 && kn.y > hip.y ? trunkAng * 2.5 : 0;
-  const flex = Math.max(pureFlex, squatFlex);
-  const ext  = kn.y > hip.y && Math.abs(kn.x - hip.x) > Math.abs(kn.y - hip.y) * 0.2 ? 180 - va : 0;
+  const flex      = kn.y < hip.y - 0.05 ? va : 0;
+  const squatFlex = trunkAng > 15 && kn.y > hip.y ? trunkAng * 2 : 0;
+  const totalFlex = Math.max(flex, squatFlex);
+
+  const ext = kn.y > hip.y && Math.abs(kn.x - hip.x) > Math.abs(kn.y - hip.y) * 0.2 ? 180 - va : 0;
 
   let abd = 0;
   if (Math.abs(kn.x - hip.x) > Math.abs(kn.y - hip.y) * 0.8) {
@@ -507,9 +506,9 @@ function analyzeHip(sh, hip, kn, side) {
     if (side === 'izquierdo' && kn.x > hip.x) abd = va;
   }
 
-  if (flex > 18 && flex >= ext && flex >= abd) {
-    if (flex > PHYS.flexion_cadera) return [null, 0];
-    return ['flexion_cadera', flex];
+  if (totalFlex > 18 && totalFlex >= ext && totalFlex >= abd) {
+    if (totalFlex > PHYS.flexion_cadera) return [null, 0];
+    return ['flexion_cadera', totalFlex];
   }
   if (ext > THR && ext > abd) {
     if (ext > PHYS.extension_cadera) return [null, 0];
