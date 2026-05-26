@@ -596,17 +596,13 @@ function updateJoint(side, joint, ex, angle) {
   d.exercise = ex;
   d.angle = smoothAngle(d.buf, angle);
 
-  if (ex !== 'reposo' && d.angle > THR) {
-    d.stableCount++;
-
-    // Actualiza mínimo desde el primer frame válido
+ if (ex !== 'reposo' && d.angle > THR) {
+  d.stableCount++;
+  // mínimo y máximo solo con valores estables
+  if (d.stableCount >= STABLE_FRAMES) {
     d.min = d.min === null ? d.angle : Math.min(d.min, d.angle);
-
-    // Actualiza máximo solo si el valor es estable (STABLE_FRAMES consecutivos)
-    if (d.stableCount >= STABLE_FRAMES && d.angle > d.max) {
-      d.max = d.angle;
-    }
-
+    if (d.angle > d.max) d.max = d.angle;
+  }
     // Registra el máximo por movimiento
     const k = `${joint}_${side}`;
     if (d.angle > (movs[k][ex] || 0)) movs[k][ex] = d.angle;
