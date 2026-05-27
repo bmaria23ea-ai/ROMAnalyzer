@@ -396,8 +396,7 @@ tbody tr:last-child td { border-bottom:none; }
 
 <script>
 'use strict';
-
-// ── MATEMÁTICAS ──────────────────────────────────────────────────────────────
+// Cálculo de ángulos
 const DEG = r => r * 180 / Math.PI;
 function vNorm(v) { return Math.sqrt(v.reduce((s, x) => s + x * x, 0)); }
 function vDot(a, b) { return a.reduce((s, x, i) => s + x * b[i], 0); }
@@ -409,32 +408,28 @@ function vecAngle(v1, v2) {
 function angle2d(p1, p2, p3) {
   return vecAngle([p1.x - p2.x, p1.y - p2.y], [p3.x - p2.x, p3.y - p2.y]);
 }
-
-// Suavizado: buffer de N frames + recorte de saltos bruscos
+// Suavizado: buffer de N frames y recorte de saltos bruscos
 function smoothAngle(buf, val, maxLen = 10, clip = 8) {
   if (buf.length > 0) val = Math.max(buf[buf.length - 1] - clip, Math.min(buf[buf.length - 1] + clip, val));
   buf.push(val);
   if (buf.length > maxLen) buf.shift();
   return buf.reduce((s, v) => s + v, 0) / buf.length;
 }
-
-// ── RANGOS FISIOLÓGICOS (AAOS) ────────────────────────────────────────────────
-// Valores máximos clínicamente posibles — se usan para DESCARTAR, no para clampar
+// RANGOS FISIOLÓGICOS para DESCARTAR, no para limitar
 const PHYS = {
-  flexion_hombro:          180,//0-180
-  extension_hombro:         60,//0-45
-  abduccion_hombro:        180,//0-180
-  flexion_codo:            145,//0-145
-  extension_codo:           10,//145-0
-  flexion_cadera:          125,//0-125
-  extension_cadera:         30,//0-30
-  abduccion_cadera:         45,//0-45
-  flexion_rodilla:         135,//0-140
-  extension_rodilla:        10,//140-0
+  flexion_hombro:          190,//0-180
+  extension_hombro:         55,//0-45
+  abduccion_hombro:        190,//0-180
+  flexion_codo:            150,//0-145
+  extension_codo:           0,//145-0
+  flexion_cadera:          135,//0-125
+  extension_cadera:         40,//0-30
+  abduccion_cadera:         55,//0-45
+  flexion_rodilla:         150,//0-140
+  extension_rodilla:        0,//140-0
   dorsiflexion_tobillo:     20,//0-20
-  flexion_plantar_tobillo:  50,//0-45
+  flexion_plantar_tobillo:  45,//0-45
 };
-
 // Umbral mínimo de movimiento activo
 const THR = 0;
 // Visibilidad mínima MediaPipe
@@ -468,7 +463,7 @@ function analyzeShoulder(sh, el, hip) {
   const dx = Math.abs(el.x - sh.x);   // desplazamiento horizontal del codo
   const dy = Math.abs(el.y - sh.y);   // desplazamiento vertical del codo
 
-  // EXTENSIÓN: codo baja claramente por debajo del hombro
+  // EXTENSIÓN codo baja por debajo del hombro
   if (el.y > sh.y + 0.02) {
     const ext = 180 - ang;
     if (ext < THR || ext > PHYS.extension_hombro) return [null, 0];
@@ -572,20 +567,22 @@ function analyzeAnkle(kn, an, side) {
 
   const ang  = vecAngle([px, py], [0, -1]);
   const last = _ankleLastAng[side];
-
   // Descarta saltos > 12° entre frames (ruido)
   if (Math.abs(ang - last) > 12) { _ankleLastAng[side] = last; return [null, 0]; }
   // Descarta reposo
-  if (Math.abs(ang - last) < 2)  { return [null, 0]; }
-
-  _ankleLastAng[side] = ang;
+  if (Math.abs(ang - last) < 5)  { return [null, 0]; }
+  // Descarta ángulos pequeños y movimiento horizontal mínimo
   if (Math.abs(px) < 0.03) return [null, 0];
+  if (ang < 8) return [null, 0];
 
-  if (px > 0 && ang >= 6) {
+  // Solo actualiza last si pasó todos los filtros
+  _ankleLastAng[side] = ang;
+
+  if (px > 0 && ang >= 8) {
     if (ang > PHYS.dorsiflexion_tobillo) return [null, 0];
     return ['dorsiflexion_tobillo', ang];
   }
-  if (px < 0 && ang >= 6) {
+  if (px < 0 && ang >= 8) {
     if (ang > PHYS.flexion_plantar_tobillo) return [null, 0];
     return ['flexion_plantar_tobillo', ang];
   }
@@ -779,7 +776,6 @@ function onResults(res) {
     drawLandmarks(ctx, lm, { color: '#00e5cc', fillColor: '#00e5cc', lineWidth: 1, radius: 5 });
   }
   ctx.restore();
-
   const map = {
     derecho:   { sh: lm[12], el: lm[14], wr: lm[16], hip: lm[24], kn: lm[26], an: lm[28] },
     izquierdo: { sh: lm[11], el: lm[13], wr: lm[15], hip: lm[23], kn: lm[25], an: lm[27] },
@@ -1042,7 +1038,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'r' || e.key === 'R') resetSession();
 });
 
-// ── INICIO ────────────────────────────────────────────────────────────────────
+//Inicio
 document.getElementById('ld').style.transition = 'opacity .4s';
 if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
   document.getElementById('ld').style.display = 'none';
