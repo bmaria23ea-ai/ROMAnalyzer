@@ -542,14 +542,20 @@ function analyzeHip(sh, hip, kn, side) {
   }
   return [null, 0];
 }
-function analyzeKnee(hip, kn, an) {
-  const ul  = [hip.x - kn.x, hip.y - kn.y];
-  const ll  = [an.x  - kn.x, an.y  - kn.y];
-  const ang = vecAngle(ul, ll);
+const _kneePrev = { derecho: 0, izquierdo: 0 };
+function analyzeKnee(hip, kn, an, side) {
+  const ul   = [hip.x - kn.x, hip.y - kn.y];
+  const ll   = [an.x  - kn.x, an.y  - kn.y];
+  const ang  = vecAngle(ul, ll);
   const flex = 180 - ang;
   if (flex < 0 || flex > PHYS.flexion_rodilla) return [null, 0];
-  if (flex > THR) return ['flexion_rodilla', flex];
-  return ['extension_rodilla', ang > 160 ? 0 : flex];
+  const prev  = _kneePrev[side];
+  _kneePrev[side] = flex;
+  const delta = flex - prev;
+  if (flex < 5) return [null, 0]; // reposo
+  if (delta >= 0) return ['flexion_rodilla',   flex];
+  if (delta <  0) return ['extension_rodilla',  flex];
+  return [null, 0];
 }
 // Estado previo de por lado para filtro de delta
 // TOBILLO
