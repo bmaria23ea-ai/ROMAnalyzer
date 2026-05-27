@@ -457,25 +457,26 @@ function analyzeShoulder(sh, el, hip) {
   const abd = angle2d(ref, sh, el);
   const dx = Math.abs(el.x - sh.x);   // desplazamiento horizontal del codo
   const dy = Math.abs(el.y - sh.y);   // desplazamiento vertical del codo
-  // EXTENSIÓN codo baja Y se mantiene cerca del plano sagital
+  // EXTENSIÓN 
+  //codo baja recto= dx=0.02  dy=0.10 → 0.02 < 0.05 
   if (el.y > sh.y + 0.02 && dx < dy * 0.5) {
     const ext = 180 - ang;
     if (ext < THR || ext > PHYS.extension_hombro) return [null, 0];
     return ['extension_hombro', ext];
   }
-  // ABDUCCIÓN: el ángulo lateral es mayor que 8° (cubre 0°-180°)
-  if (abd > 8) {
-    if (abd > PHYS.abduccion_hombro) return [null, 0];
-    return ['abduccion_hombro', abd];
-  }
   // FLEXIÓN
   // el codo sube pero se mantiene cerca del plano sagital
   // dx pequeño respecto a dy significa que el movimiento es más vertical
-  if (el.y < sh.y - 0.01 && dx <= dy * 0.5) {
+  if (el.y < sh.y - 0.01 && dx < dy * 0.6) {
     if (ang > PHYS.flexion_hombro) return [null, 0];
     return ['flexion_hombro', ang];
   }
-
+  // ABDUCCIÓN: el ángulo lateral es mayor que 8° (cubre 0°-180°)
+  //codo baja y va al lado= dx=0.08  dy=0.10 → 0.08 < 0.05
+  if (abd > 8 && dx > dy * 0.6) {
+    if (abd > PHYS.abduccion_hombro) return [null, 0];
+    return ['abduccion_hombro', abd];
+  }
   return [null, 0];
 }
 
