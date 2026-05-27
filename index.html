@@ -417,15 +417,15 @@ function smoothAngle(buf, val, maxLen = 10, clip = 8) {
 }
 // RANGOS FISIOLÓGICOS para DESCARTAR, no para limitar
 const PHYS = {
-  flexion_hombro:          190,//0-180
-  extension_hombro:         55,//0-45
-  abduccion_hombro:        190,//0-180
+  flexion_hombro:          180,//0-180
+  extension_hombro:         60,//0-45
+  abduccion_hombro:        180,//0-180
   flexion_codo:            150,//0-145
   extension_codo:           0,//145-0
   flexion_cadera:          135,//0-125
   extension_cadera:         40,//0-30
   abduccion_cadera:         55,//0-45
-  flexion_rodilla:         150,//0-140
+  flexion_rodilla:         140,//0-140
   extension_rodilla:        0,//140-0
   dorsiflexion_tobillo:     20,//0-20
   flexion_plantar_tobillo:  45,//0-45
@@ -436,7 +436,6 @@ const THR = 0;
 const VIS = 0.75;
 // Frames consecutivos antes de actualizar el máximo
 const STABLE_FRAMES = 3;
-
 const META = {
   flexion_hombro:          { n: 'Flexión',      r: 'superior' },
   extension_hombro:        { n: 'Extensión',    r: 'superior' },
@@ -451,25 +450,21 @@ const META = {
   dorsiflexion_tobillo:    { n: 'Dorsiflexión', r: 'inferior' },
   flexion_plantar_tobillo: { n: 'Flex.Plantar', r: 'inferior' },
 };
-
 //ANÁLISIS DE ARTICULACIONES
 function analyzeShoulder(sh, el, hip) {
   const ang = angle2d(hip, sh, el);
   const ref = { x: sh.x, y: sh.y + 0.3 };
   const abd = angle2d(ref, sh, el);
-
   const dx = Math.abs(el.x - sh.x);   // desplazamiento horizontal del codo
   const dy = Math.abs(el.y - sh.y);   // desplazamiento vertical del codo
-
-  // EXTENSIÓN: codo baja Y se mantiene cerca del plano sagital
-  if (el.y > sh.y + 0.01 && dx < dy * 0.3) {
+  // EXTENSIÓN codo baja Y se mantiene cerca del plano sagital
+  if (el.y > sh.y + 0.02 && dx < dy * 0.5) {
     const ext = 180 - ang;
     if (ext < THR || ext > PHYS.extension_hombro) return [null, 0];
     return ['extension_hombro', ext];
   }
-  
-  // ABDUCCIÓN: el ángulo lateral es mayor que 15° (cubre 0°-180°)
-  if (abd > 15) {
+  // ABDUCCIÓN: el ángulo lateral es mayor que 8° (cubre 0°-180°)
+  if (abd > 8) {
     if (abd > PHYS.abduccion_hombro) return [null, 0];
     return ['abduccion_hombro', abd];
   }
@@ -993,8 +988,7 @@ async function guardar(id) {
   formOpen = false; await renderDet(); renderSesList(); toast('✓ Paciente asignado', true);
 }
 async function confirmDel(id) { if (confirm(`¿Borrar sesión #${id}?`)) { await deleteSes(id); goBack(); } }
-
-// ── NAVEGACIÓN ────────────────────────────────────────────────────────────────
+// NAVEGACIÓN
 let curScreen = 'cam';
 function goScreen(name) {
   ['cam', 'ses', 'det'].forEach(s => document.getElementById('sc-' + s).classList.toggle('off', s !== name));
@@ -1005,8 +999,7 @@ function goScreen(name) {
   curScreen = name;
 }
 function goBack() { goScreen(curScreen === 'det' ? 'ses' : 'cam'); }
-
-// ── UTILIDADES ────────────────────────────────────────────────────────────────
+// UTILIDADES
 let tTimer;
 function toast(msg, green = false) {
   const el = document.getElementById('toast');
