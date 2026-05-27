@@ -487,7 +487,7 @@ function analyzeShoulder(sh, el, hip) {
 
   // FLEXIÓN: el codo sube pero se mantiene cerca del plano sagital
   // dx pequeño respecto a dy significa que el movimiento es más vertical
-  if (el.y < sh.y - 0.01 && dx <= dy * 0.8) {
+  if (el.y < sh.y - 0.01 && dx <= dy * 0.5) {
     if (ang > PHYS.flexion_hombro) return [null, 0];
     return ['flexion_hombro', ang];
   }
