@@ -469,7 +469,7 @@ function analyzeShoulder(sh, el, hip) {
   }
   // ABDUCCIÓN
   // el ángulo lateral es mayor que 15°
-  if (abd > 15) {
+  if (abd > 5) {
     if (abd > PHYS.abduccion_hombro) return [null, 0];
     return ['abduccion_hombro', abd];
   }
@@ -607,7 +607,6 @@ function mkMovs() {
   for (const side of SIDES) for (const j of JOINTS) m[`${j}_${side}`] = {};
   return m;
 }
-
 let jData = mkState(), registro = [], movs = mkMovs(), ticks = 0, sesStart = null;
 function updateJoint(side, joint, ex, angle) {
   const d = jData[side][joint];
@@ -645,12 +644,10 @@ function tick() {
     }
   }
 }
-
-// ── API ───────────────────────────────────────────────────────────────────────
+//API
 const API_URL = 'https://backend-d2fb.onrender.com/api/sesiones.php';
 const API_KEY = '-xK9mP3qL7nR2wT8v';
 const API_H   = { 'X-API-Key': API_KEY };
-
 async function apiGet(path = '') {
   try { const r = await fetch(API_URL + path, { headers: API_H }); if (!r.ok) return null; return r.json(); }
   catch (e) { console.error('[ROM] GET' + path, e); return null; }
