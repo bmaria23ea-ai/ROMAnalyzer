@@ -501,7 +501,7 @@ function analyzeElbow(sh, el, wr, side) {
   const flex = raw - _elbowBaseline[side];
   if (flex < 0 || flex > PHYS.flexion_codo) return [null, 0];
   if (flex > THR) return ['flexion_codo', flex];
-  if (flex < 8)   return ['extension_codo', 0];
+  if (flex < 0)   return ['extension_codo', 0];
   return [null, 0];
 }
 function analyzeHip(sh, hip, kn, side) {
