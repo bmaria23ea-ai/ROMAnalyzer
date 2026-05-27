@@ -461,15 +461,15 @@ function analyzeShoulder(sh, el, hip) {
   const dx = Math.abs(el.x - sh.x);   // desplazamiento horizontal del codo
   const dy = Math.abs(el.y - sh.y);   // desplazamiento vertical del codo
 
-  // EXTENSIÓN codo baja por debajo del hombro
-  if (el.y > sh.y + 0.02) {
+  // EXTENSIÓN: codo baja Y se mantiene cerca del plano sagital
+  if (el.y > sh.y + 0.01 && dx < dy * 0.3) {
     const ext = 180 - ang;
     if (ext < THR || ext > PHYS.extension_hombro) return [null, 0];
     return ['extension_hombro', ext];
   }
-  // ABDUCCIÓN
-  // el ángulo lateral es mayor que 15°
-  if (abd > 5) {
+  
+  // ABDUCCIÓN: el ángulo lateral es mayor que 15° (cubre 0°-180°)
+  if (abd > 15) {
     if (abd > PHYS.abduccion_hombro) return [null, 0];
     return ['abduccion_hombro', abd];
   }
