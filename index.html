@@ -496,6 +496,13 @@ function analyzeShoulder(sh, el, hip) {
   }
   return [null, 0];
 }
+function analyzeElbow(sh, el, wr) {   // ← esto falta, agrégalo aquí
+  const flex = 180 - angle2d(sh, el, wr);
+  if (flex < 0 || flex > PHYS.flexion_codo) return [null, 0];
+  if (flex > THR) return ['flexion_codo', flex];
+  if (flex < 8)   return ['extension_codo', 0];
+  return [null, 0];
+}
 
 function analyzeHip(sh, hip, kn, side) {
   const trunk = [sh.x - hip.x, sh.y - hip.y];
