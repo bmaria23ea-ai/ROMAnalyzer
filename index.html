@@ -573,16 +573,16 @@ function analyzeAnkle(kn, an, side) {
   if (Math.abs(ang - last) < 5)  { return [null, 0]; }
   // Descarta ángulos pequeños y movimiento horizontal mínimo
   if (Math.abs(px) < 0.03) return [null, 0];
-  if (ang < 8) return [null, 0];
+  if (ang < 12) return [null, 0];
 
   // Solo actualiza last si pasó todos los filtros
   _ankleLastAng[side] = ang;
 
-  if (px > 0 && ang >= 8) {
+  if (px > 0 && ang >= 12) {
     if (ang > PHYS.dorsiflexion_tobillo) return [null, 0];
     return ['dorsiflexion_tobillo', ang];
   }
-  if (px < 0 && ang >= 8) {
+  if (px < 0 && ang >= 12) {
     if (ang > PHYS.flexion_plantar_tobillo) return [null, 0];
     return ['flexion_plantar_tobillo', ang];
   }
