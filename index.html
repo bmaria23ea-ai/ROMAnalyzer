@@ -487,9 +487,11 @@ function analyzeShoulder(sh, el, hip) {
 // CODO
 const _elbowBaseline = { derecho: null, izquierdo: null };
 const _elbowBaseFrames = { derecho: [], izquierdo: [] };
+const _elbowPrev = { derecho: 0, izquierdo: 0 };
+
 function analyzeElbow(sh, el, wr, side) {
   const raw = 180 - angle2d(sh, el, wr);
-  // Calibrar baseline con primeros 30 frames
+
   if (_elbowBaseline[side] === null) {
     _elbowBaseFrames[side].push(raw);
     if (_elbowBaseFrames[side].length >= 30) {
@@ -498,10 +500,20 @@ function analyzeElbow(sh, el, wr, side) {
     }
     return [null, 0];
   }
+
   const flex = raw - _elbowBaseline[side];
   if (flex < 0 || flex > PHYS.flexion_codo) return [null, 0];
-  if (flex > THR) return ['flexion_codo', flex];
-  if (flex < 8)   return ['extension_codo', 0];
+
+  const prev = _elbowPrev[side];
+  _elbowPrev[side] = flex;
+
+  const delta = flex - prev; // positivo = flexionando, negativo = extendiendo
+
+  if (flex < 5) return [null, 0]; // reposo
+
+  if (delta >= 0) return ['flexion_codo', flex];  // subiendo
+  if (delta < 0)  return ['extension_codo', flex]; // bajando
+
   return [null, 0];
 }
 function analyzeHip(sh, hip, kn, side) {
