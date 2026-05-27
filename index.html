@@ -421,18 +421,18 @@ function smoothAngle(buf, val, maxLen = 10, clip = 8) {
 // ── RANGOS FISIOLÓGICOS (AAOS) ────────────────────────────────────────────────
 // Valores máximos clínicamente posibles — se usan para DESCARTAR, no para clampar
 const PHYS = {
-  flexion_hombro:          180,
-  extension_hombro:         60,
-  abduccion_hombro:        180,
-  flexion_codo:            145,
-  extension_codo:           10,
-  flexion_cadera:          120,
-  extension_cadera:         30,
-  abduccion_cadera:         45,
-  flexion_rodilla:         135,
-  extension_rodilla:        10,
-  dorsiflexion_tobillo:     20,
-  flexion_plantar_tobillo:  50,
+  flexion_hombro:          180,//0-180
+  extension_hombro:         60,//0-45
+  abduccion_hombro:        180,//0-180
+  flexion_codo:            145,//0-145
+  extension_codo:           10,//145-0
+  flexion_cadera:          125,//0-125
+  extension_cadera:         30,//0-30
+  abduccion_cadera:         45,//0-45
+  flexion_rodilla:         135,//0-140
+  extension_rodilla:        10,//140-0
+  dorsiflexion_tobillo:     20,//0-20
+  flexion_plantar_tobillo:  50,//0-45
 };
 
 // Umbral mínimo de movimiento activo
@@ -506,29 +506,45 @@ function analyzeHip(sh, hip, kn, side) {
   const va = vecAngle(trunk, leg);
   const trunkAng = vecAngle(trunk, [0, -1]);
 
-  const flex      = kn.y < hip.y - 0.05 ? va : 0;
-  const squatFlex = trunkAng > 15 && kn.y > hip.y ? trunkAng * 2 : 0;
-  const totalFlex = Math.max(flex, squatFlex);
-
-  const ext = kn.y > hip.y && Math.abs(kn.x - hip.x) > Math.abs(kn.y - hip.y) * 0.2 ? 180 - va : 0;
-
+  // ABDUCCIÓN: rodilla se va al lado con poco componente vertical
+  const dx = Math.abs(kn.x - hip.x);
+  const dy = Math.abs(kn.y - hip.y);
   let abd = 0;
-  if (Math.abs(kn.x - hip.x) > Math.abs(kn.y - hip.y) * 0.8) {
+  if (dx > dy * 0.8) {
     if (side === 'derecho'   && kn.x < hip.x) abd = va;
     if (side === 'izquierdo' && kn.x > hip.x) abd = va;
   }
 
-  if (totalFlex > 18 && totalFlex >= ext && totalFlex >= abd) {
-    if (totalFlex > PHYS.flexion_cadera) return [null, 0];
-    return ['flexion_cadera', totalFlex];
+  // FLEXIÓN: cubre tanto pierna que sube (flex clásica)
+  // como sentadilla (rodilla debajo de cadera pero tronco inclinado)
+  let flex = 0;
+  if (kn.y < hip.y - 0.05) {
+    // Flexión clásica: rodilla sube sobre la cadera
+    flex = va;
+  } else if (kn.y >= hip.y) {
+    // Sentadilla: usamos ángulo real entre tronco y muslo
+    // va ya mide ese ángulo correctamente
+    // en sentadilla profunda va es pequeño (tronco y muslo casi paralelos)
+    // necesitamos 180 - va para obtener el ángulo de flexión real
+    flex = 180 - va;
   }
-  if (ext > THR && ext > abd) {
-    if (ext > PHYS.extension_cadera) return [null, 0];
-    return ['extension_cadera', ext];
-  }
-  if (abd > THR) {
+
+  // EXTENSIÓN: solo cuando la rodilla va claramente detrás de la cadera
+  // y el tronco está casi vertical (no es una sentadilla)
+  const ext = (kn.y > hip.y && trunkAng < 15 && dx < dy * 0.3) ? va : 0;
+
+  // Prioridad: abducción > flexión > extensión
+  if (abd > THR && abd >= flex && abd >= ext) {
     if (abd > PHYS.abduccion_cadera) return [null, 0];
     return ['abduccion_cadera', abd];
+  }
+  if (flex > 18 && flex >= ext) {
+    if (flex > PHYS.flexion_cadera) return [null, 0];
+    return ['flexion_cadera', flex];
+  }
+  if (ext > THR) {
+    if (ext > PHYS.extension_cadera) return [null, 0];
+    return ['extension_cadera', ext];
   }
   return [null, 0];
 }
