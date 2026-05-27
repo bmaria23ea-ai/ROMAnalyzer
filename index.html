@@ -497,26 +497,20 @@ function analyzeHip(sh, hip, kn, side) {
     if (side === 'derecho'   && kn.x < hip.x) abd = va;
     if (side === 'izquierdo' && kn.x > hip.x) abd = va;
   }
-
-  // FLEXIÓN: cubre tanto pierna que sube (flex clásica)
-  // como sentadilla (rodilla debajo de cadera pero tronco inclinado)
+  // FLEXIÓN
+  // rodilla debajo de cadera pero tronco inclinado
   let flex = 0;
   if (kn.y < hip.y - 0.05) {
-    // Flexión clásica: rodilla sube sobre la cadera
+    // rodilla sube sobre la cadera
     flex = va;
   } else if (kn.y >= hip.y) {
-    // Sentadilla: usamos ángulo real entre tronco y muslo
-    // va ya mide ese ángulo correctamente
-    // en sentadilla profunda va es pequeño (tronco y muslo casi paralelos)
-    // necesitamos 180 - va para obtener el ángulo de flexión real
+    // Sentadilla (ángulo real entre tronco y muslo)
     flex = 180 - va;
   }
-
-  // EXTENSIÓN: solo cuando la rodilla va claramente detrás de la cadera
-  // y el tronco está casi vertical (no es una sentadilla)
+  // EXTENSIÓN (rodilla detrás de la cadera)
+  // tronco casi vertical (no es una sentadilla)
   const ext = (kn.y > hip.y && trunkAng < 15 && dx < dy * 0.3) ? va : 0;
-
-  // Prioridad: abducción > flexión > extensión
+  //abducción, flexión, extensión
   if (abd > THR && abd >= flex && abd >= ext) {
     if (abd > PHYS.abduccion_cadera) return [null, 0];
     return ['abduccion_cadera', abd];
@@ -531,7 +525,6 @@ function analyzeHip(sh, hip, kn, side) {
   }
   return [null, 0];
 }
-
 function analyzeKnee(hip, kn, an) {
   const ul  = [hip.x - kn.x, hip.y - kn.y];
   const ll  = [an.x  - kn.x, an.y  - kn.y];
@@ -541,15 +534,13 @@ function analyzeKnee(hip, kn, an) {
   if (flex > THR) return ['flexion_rodilla', flex];
   return ['extension_rodilla', ang > 160 ? 0 : flex];
 }
-
+// TOBILLO
 // Estado previo de tobillo por lado para filtro de delta
 const _ankleLastAng = { derecho: 0, izquierdo: 0 };
-
 function analyzeAnkle(kn, an, side) {
   const px = kn.x - an.x;
   const py = kn.y - an.y;
   if (Math.hypot(px, py) < 0.02) return [null, 0];
-
   const ang  = vecAngle([px, py], [0, -1]);
   const last = _ankleLastAng[side];
   // Descarta saltos > 12° entre frames (ruido)
@@ -559,10 +550,8 @@ function analyzeAnkle(kn, an, side) {
   // Descarta ángulos pequeños y movimiento horizontal mínimo
   if (Math.abs(px) < 0.03) return [null, 0];
   if (ang < 8) return [null, 0];
-
   // Solo actualiza last si pasó todos los filtros
   _ankleLastAng[side] = ang;
-
   if (px > 0 && ang >= 8) {
     if (ang > PHYS.dorsiflexion_tobillo) return [null, 0];
     return ['dorsiflexion_tobillo', ang];
@@ -573,8 +562,7 @@ function analyzeAnkle(kn, an, side) {
   }
   return [null, 0];
 }
-
-// ── ESTADO ───────────────────────────────────────────────────────────────────
+// ESTADO 
 function localISO(d = new Date()) {
   return d.toLocaleString('sv-SE').replace('T', ' ');
 }
@@ -583,7 +571,6 @@ const JOINTS = ['hombro', 'codo', 'cadera', 'rodilla', 'tobillo'];
 const J_SUP  = ['hombro', 'codo'];
 const J_INF  = ['cadera', 'rodilla', 'tobillo'];
 const COLS   = { hombro: 'var(--blue)', codo: 'var(--cyan)', cadera: 'var(--orange)', rodilla: 'var(--green)', tobillo: 'var(--purple)' };
-
 function mkState() {
   const s = {};
   for (const side of SIDES) {
@@ -691,17 +678,15 @@ async function saveSession() {
   toast(`✓ Sesión #${sid} guardada`, true);
   renderSesList();
 }
-
+//RESET
 function resetSession() {
   jData = mkState(); registro = []; movs = mkMovs();
   sesStart = null; ticks = 0;
   _ankleLastAng.derecho = 0; _ankleLastAng.izquierdo = 0;
   toast('🔄 Reset completo');
 }
-
 async function updateSes(id, p, n) { await apiPatch(id, { paciente: p, notas: n }); }
 async function deleteSes(id)       { await apiDel(id); renderSesList(); toast('Sesión eliminada'); }
-
 async function exportSes(id) {
   const all = await loadAll();
   const s = all.find(x => x.id === id); if (!s) return;
@@ -712,7 +697,6 @@ async function exportSes(id) {
   a.href = URL.createObjectURL(new Blob([JSON.stringify(s, null, 4)], { type: 'application/json' }));
   a.download = name; a.click();
 }
-
 function importJSON(inp) {
   const f = inp.files[0]; if (!f) return;
   const r = new FileReader();
@@ -727,13 +711,11 @@ function importJSON(inp) {
   };
   r.readAsText(f); inp.value = '';
 }
-
-// ── MEDIAPIPE ─────────────────────────────────────────────────────────────────
+// MEDIAPIPE 
 const vid = document.getElementById('vid');
 const cvs = document.getElementById('cvs');
 const ctx = cvs.getContext('2d');
 let pose, cameraOn = false, facingMode = 'user';
-
 function onResults(res) {
   ctx.clearRect(0, 0, cvs.width, cvs.height);
   const lm = res.poseLandmarks;
@@ -847,8 +829,7 @@ async function loop() {
   }
   requestAnimationFrame(loop);
 }
-
-// ── UI: PANEL DE ÁNGULOS ──────────────────────────────────────────────────────
+// PANEL DE ÁNGULOS 
 function renderAP() {
   document.getElementById('ap-sup').innerHTML = J_SUP.flatMap(j => SIDES.map(s => apCard(j, s))).join('');
   document.getElementById('ap-inf').innerHTML = J_INF.flatMap(j => SIDES.map(s => apCard(j, s))).join('');
@@ -866,8 +847,7 @@ function apCard(j, side) {
     <div class="apc-max">MAX ${Math.round(d.max)}°</div>
   </div>`;
 }
-
-// ── UI: SESIONES ──────────────────────────────────────────────────────────────
+// SESIONES
 let qFilter = '';
 function filterSes(v) { qFilter = v; renderSesList(); }
 async function renderSesList() {
@@ -886,8 +866,7 @@ async function renderSesList() {
       <div class="si-date">${(s.inicio || '—').slice(0, 16)}</div>
     </div>`).join('');
 }
-
-// ── UI: DETALLE ───────────────────────────────────────────────────────────────
+// DETALLE
 let detId = null, formOpen = false;
 async function openDet(id) {
   detId = id; formOpen = false;
@@ -896,7 +875,6 @@ async function openDet(id) {
 }
 async function renderDet() {
   const s = (await loadAll()).find(x => x.id === detId); if (!s) return;
-
   function jCard(j, side) {
     const k    = `${j}_${side}`;
     const d    = s.max_min?.[k] || { max: 0, min: null };
@@ -916,7 +894,6 @@ async function renderDet() {
         </div>`).join('')}` : ''}
     </div>`;
   }
-
   const regs = s.registro || [];
   document.getElementById('det-body').innerHTML = `
     <div class="shd-card">
@@ -1012,8 +989,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 's' || e.key === 'S') saveSession();
   if (e.key === 'r' || e.key === 'R') resetSession();
 });
-
-//Inicio
+// INICIO
 document.getElementById('ld').style.transition = 'opacity .4s';
 if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
   document.getElementById('ld').style.display = 'none';
