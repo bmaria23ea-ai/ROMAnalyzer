@@ -783,7 +783,7 @@ function onResults(res) {
       updateJoint(side, 'cadera', ex || 'reposo', ang);
     }
     if (vis('hip') && vis('kn') && vis('an')) {
-      const [ex, ang] = analyzeKnee(p.hip, p.kn, p.an);
+      const [ex, ang] = analyzeKnee(p.hip, p.kn, p.an, side);
       updateJoint(side, 'rodilla', ex || 'reposo', ang);
     }
     if (vis('kn') && vis('an')) {
