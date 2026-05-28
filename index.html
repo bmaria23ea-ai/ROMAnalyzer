@@ -420,12 +420,12 @@ const PHYS = {
   flexion_hombro:          180,//0-180
   extension_hombro:         60,//0-45
   abduccion_hombro:        180,//0-180
-  flexion_codo:            145,//0-145
+  flexion_codo:            150,//0-145
   extension_codo:           0,//145-0
   flexion_cadera:          135,//0-125
   extension_cadera:         40,//0-30
   abduccion_cadera:         55,//0-45
-  flexion_rodilla:         150,//0-140
+  flexion_rodilla:         140,//0-140
   extension_rodilla:        0,//140-0
   dorsiflexion_tobillo:     20,//0-20
   flexion_plantar_tobillo:  45,//0-45
@@ -477,11 +477,19 @@ function analyzeShoulder(sh, el, hip) {
   return [null, 0];
 }
 // CODO
+//function analyzeElbow(sh, el, wr) {
+//  const flex = 180 - angle2d(sh, el, wr);
+//  if (flex < 0 || flex > PHYS.flexion_codo) return [null, 0];
+//  if (flex > THR) return ['flexion_codo', flex];
+//  if (flex < 8)   return ['extension_codo', 0];
+//  return [null, 0];
+//}
+// CODO
 const _elbowBaseline = { derecho: null, izquierdo: null };
 const _elbowBaseFrames = { derecho: [], izquierdo: [] };
-const _elbowPrev = { derecho: 0, izquierdo: 0 };
 function analyzeElbow(sh, el, wr, side) {
   const raw = 180 - angle2d(sh, el, wr);
+  // Calibrar baseline con primeros 30 frames
   if (_elbowBaseline[side] === null) {
     _elbowBaseFrames[side].push(raw);
     if (_elbowBaseFrames[side].length >= 30) {
@@ -492,67 +500,60 @@ function analyzeElbow(sh, el, wr, side) {
   }
   const flex = raw - _elbowBaseline[side];
   if (flex < 0 || flex > PHYS.flexion_codo) return [null, 0];
-  const prev = _elbowPrev[side];
-  _elbowPrev[side] = flex;
-  const delta = flex - prev; // positivo = flexionando, negativo = extendiendo
-  if (flex < 5) return [null, 0]; // reposo
-  if (delta >= 0) return ['flexion_codo', flex];  // subiendo
-  if (delta < 0)  return ['extension_codo', flex]; // bajando
+  if (flex > THR) return ['flexion_codo', flex];
+  if (flex < 8)   return ['extension_codo', 0];
   return [null, 0];
 }
-//CADERA  
-const _hipPrev = { derecho: 0, izquierdo: 0 };
 function analyzeHip(sh, hip, kn, side) {
   const trunk = [sh.x - hip.x, sh.y - hip.y];
   const leg   = [kn.x - hip.x, kn.y - hip.y];
-  const va    = vecAngle(trunk, leg);
+  const va = vecAngle(trunk, leg);
+  const trunkAng = vecAngle(trunk, [0, -1]);
+  // ABDUCCIÓN
+  // rodilla se va al lado con poco componente vertical
   const dx = Math.abs(kn.x - hip.x);
   const dy = Math.abs(kn.y - hip.y);
-  // ABDUCCIÓN: movimiento lateral dominante
   let abd = 0;
   if (dx > dy * 0.8) {
     if (side === 'derecho'   && kn.x < hip.x) abd = va;
     if (side === 'izquierdo' && kn.x > hip.x) abd = va;
   }
-  if (abd > THR) {
+  // FLEXIÓN
+  // rodilla debajo de cadera pero tronco inclinado
+  let flex = 0;
+  if (kn.y < hip.y - 0.05) {
+    // rodilla sube sobre la cadera
+    flex = va;
+  } else if (kn.y >= hip.y) {
+    // Sentadilla (ángulo real entre tronco y muslo)
+    flex = 180 - va;
+  }
+  // EXTENSIÓN (rodilla detrás de la cadera)
+  // tronco casi vertical (no es una sentadilla)
+  const ext = (kn.y > hip.y && trunkAng < 15 && dx < dy * 0.3) ? va : 0;
+  //abducción, flexión, extensión
+  if (abd > THR && abd >= flex && abd >= ext) {
     if (abd > PHYS.abduccion_cadera) return [null, 0];
     return ['abduccion_cadera', abd];
   }
-  // FLEXIÓN / EXTENSIÓN por dirección
-  let flex = 0;
-  if (kn.y < hip.y - 0.05) {
-    flex = va;
-  } else if (kn.y >= hip.y) {
-    flex = 180 - va;
-  }
-  if (flex < 5) return [null, 0]; // reposo
-  const prev  = _hipPrev[side];
-  _hipPrev[side] = flex;
-  const delta = flex - prev;
-  if (delta >= 0) {
+  if (flex > 18 && flex >= ext) {
     if (flex > PHYS.flexion_cadera) return [null, 0];
     return ['flexion_cadera', flex];
   }
-  if (delta < 0) {
-    if (flex > PHYS.extension_cadera) return [null, 0];
-    return ['extension_cadera', flex];
+  if (ext > THR) {
+    if (ext > PHYS.extension_cadera) return [null, 0];
+    return ['extension_cadera', ext];
   }
   return [null, 0];
 }
-const _kneePrev = { derecho: 0, izquierdo: 0 };
-function analyzeKnee(hip, kn, an, side) {
-  const ul   = [hip.x - kn.x, hip.y - kn.y];
-  const ll   = [an.x  - kn.x, an.y  - kn.y];
-  const ang  = vecAngle(ul, ll);
+function analyzeKnee(hip, kn, an) {
+  const ul  = [hip.x - kn.x, hip.y - kn.y];
+  const ll  = [an.x  - kn.x, an.y  - kn.y];
+  const ang = vecAngle(ul, ll);
   const flex = 180 - ang;
   if (flex < 0 || flex > PHYS.flexion_rodilla) return [null, 0];
-  const prev  = _kneePrev[side];
-  _kneePrev[side] = flex;
-  const delta = flex - prev;
-  if (flex < 5) return [null, 0]; // reposo
-  if (delta >= 0) return ['flexion_rodilla',   flex];
-  if (delta <  0) return ['extension_rodilla',  flex];
-  return [null, 0];
+  if (flex > THR) return ['flexion_rodilla', flex];
+  return ['extension_rodilla', ang > 160 ? 0 : flex];
 }
 // Estado previo de por lado para filtro de delta
 // TOBILLO
@@ -783,7 +784,7 @@ function onResults(res) {
       updateJoint(side, 'cadera', ex || 'reposo', ang);
     }
     if (vis('hip') && vis('kn') && vis('an')) {
-      const [ex, ang] = analyzeKnee(p.hip, p.kn, p.an, side);
+      const [ex, ang] = analyzeKnee(p.hip, p.kn, p.an);
       updateJoint(side, 'rodilla', ex || 'reposo', ang);
     }
     if (vis('kn') && vis('an')) {
