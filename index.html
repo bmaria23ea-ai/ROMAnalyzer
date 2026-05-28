@@ -500,45 +500,42 @@ function analyzeElbow(sh, el, wr, side) {
   if (delta < 0)  return ['extension_codo', flex]; // bajando
   return [null, 0];
 }
+//CADERA  
+const _hipPrev = { derecho: 0, izquierdo: 0 };
 function analyzeHip(sh, hip, kn, side) {
   const trunk = [sh.x - hip.x, sh.y - hip.y];
   const leg   = [kn.x - hip.x, kn.y - hip.y];
-  const va = vecAngle(trunk, leg);
-  const trunkAng = vecAngle(trunk, [0, -1]);
-  // ABDUCCIÓN
-  // rodilla se va al lado con poco componente vertical
+  const va    = vecAngle(trunk, leg);
   const dx = Math.abs(kn.x - hip.x);
   const dy = Math.abs(kn.y - hip.y);
+  // ABDUCCIÓN: movimiento lateral dominante
   let abd = 0;
   if (dx > dy * 0.8) {
     if (side === 'derecho'   && kn.x < hip.x) abd = va;
     if (side === 'izquierdo' && kn.x > hip.x) abd = va;
   }
-  // FLEXIÓN
-  // rodilla debajo de cadera pero tronco inclinado
-  let flex = 0;
-  if (kn.y < hip.y - 0.05) {
-    // rodilla sube sobre la cadera
-    flex = va;
-  } else if (kn.y >= hip.y) {
-    // Sentadilla (ángulo real entre tronco y muslo)
-    flex = 180 - va;
-  }
-  // EXTENSIÓN (rodilla detrás de la cadera)
-  // tronco casi vertical (no es una sentadilla)
-  const ext = (kn.y > hip.y && trunkAng < 15 && dx < dy * 0.3) ? va : 0;
-  //abducción, flexión, extensión
-  if (abd > THR && abd >= flex && abd >= ext) {
+  if (abd > THR) {
     if (abd > PHYS.abduccion_cadera) return [null, 0];
     return ['abduccion_cadera', abd];
   }
-  if (flex > 18 && flex >= ext) {
+  // FLEXIÓN / EXTENSIÓN por dirección
+  let flex = 0;
+  if (kn.y < hip.y - 0.05) {
+    flex = va;
+  } else if (kn.y >= hip.y) {
+    flex = 180 - va;
+  }
+  if (flex < 5) return [null, 0]; // reposo
+  const prev  = _hipPrev[side];
+  _hipPrev[side] = flex;
+  const delta = flex - prev;
+  if (delta >= 0) {
     if (flex > PHYS.flexion_cadera) return [null, 0];
     return ['flexion_cadera', flex];
   }
-  if (ext > THR) {
-    if (ext > PHYS.extension_cadera) return [null, 0];
-    return ['extension_cadera', ext];
+  if (delta < 0) {
+    if (flex > PHYS.extension_cadera) return [null, 0];
+    return ['extension_cadera', flex];
   }
   return [null, 0];
 }
