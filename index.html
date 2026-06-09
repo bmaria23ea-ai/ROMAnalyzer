@@ -452,7 +452,9 @@ const META = {
 };
 //ANÁLISIS DE ARTICULACIONES
 function analyzeShoulder(sh, el, hip) {
-  const ang = angle2d(hip, sh, el);
+  const trunk = [hip.x - sh.x, hip.y - sh.y];
+  const arm   = [el.x  - sh.x, el.y  - sh.y];
+  const ang   = vecAngle(trunk, arm);
   const ref = { x: sh.x, y: sh.y + 0.3 };
   const abd = angle2d(ref, sh, el);
   const dx = Math.abs(el.x - sh.x);   // desplazamiento horizontal del codo
