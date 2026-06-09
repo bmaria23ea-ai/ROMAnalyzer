@@ -465,13 +465,14 @@ function analyzeShoulder(sh, el, hip) {
     return ['abduccion_hombro', abd];
   }
   // FLEXIÓN: codo sube (dy negativo)
+// FLEXIÓN: codo sube (dy negativo)
   if (dy <= 0) {
-    if (angTrunk < THR || angTrunk > PHYS.flexion_hombro) return [null, 0];
+    if (angTrunk < 10 || angTrunk > PHYS.flexion_hombro) return [null, 0];
     return ['flexion_hombro', angTrunk];
   }
   // EXTENSIÓN: codo baja con movimiento estrecho
   if (dy > 0 && Math.abs(dx) < Math.abs(dy) * 0.6) {
-    if (angTrunk < THR || angTrunk > PHYS.extension_hombro) return [null, 0];
+    if (angTrunk < 10 || angTrunk > PHYS.extension_hombro) return [null, 0];
     return ['extension_hombro', angTrunk];
   }
   return [null, 0];
@@ -491,9 +492,9 @@ function analyzeElbow(sh, el, wr, side) {
     return [null, 0];
   }
   const flex = _elbowBaseline[side] - raw;
-  if (flex < 0 || flex > PHYS.flexion_codo) return [null, 0];
-  if (flex > THR) return ['flexion_codo', flex];
-  if (flex < 8)   return ['extension_codo', 0];
+  if (flex > PHYS.flexion_codo) return [null, 0];
+  if (flex > 8)  return ['flexion_codo', flex];
+  if (flex < -8) return ['extension_codo', Math.abs(flex)];
   return [null, 0];
 }
 function analyzeHip(sh, hip, kn, side) {
@@ -522,7 +523,7 @@ function analyzeHip(sh, hip, kn, side) {
   }
   // EXTENSIÓN (rodilla detrás de la cadera)
   // tronco casi vertical (no es una sentadilla)
-  const ext = (kn.y > hip.y && trunkAng < 15 && dx < dy * 0.3) ? va : 0;
+  const ext = (kn.y > hip.y && trunkAng < 25 && dx < dy * 0.4) ? va : 0;
   //abducción, flexión, extensión
   if (abd > THR && abd >= flex && abd >= ext) {
     if (abd > PHYS.abduccion_cadera) return [null, 0];
@@ -543,9 +544,11 @@ function analyzeKnee(hip, kn, an) {
   const ll  = [an.x  - kn.x, an.y  - kn.y];
   const ang = vecAngle(ul, ll);
   const flex = 180 - ang;
-  if (flex < 0 || flex > PHYS.flexion_rodilla) return [null, 0];
-  if (flex > THR) return ['flexion_rodilla', flex];
-  return ['extension_rodilla', ang > 160 ? 0 : flex];
+  if (flex > PHYS.flexion_rodilla) return [null, 0];
+  if (flex > 8)  return ['flexion_rodilla', flex];
+  if (flex < -8) return ['extension_rodilla', Math.abs(flex)];
+  if (flex >= 0 && flex <= 8) return [null, 0];
+  return [null, 0];
 }
 // Estado previo de por lado para filtro de delta
 // TOBILLO
