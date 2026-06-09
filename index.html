@@ -452,37 +452,44 @@ const META = {
 };
 //ANÁLISIS DE ARTICULACIONES
 function analyzeShoulder(sh, el, hip) {
-  const trunk = [hip.x - sh.x, hip.y - sh.y];
-  const arm   = [el.x - sh.x,  el.y - sh.y];
-  const dx = el.x - sh.x;
-  const dy = el.y - sh.y;
-  const angTrunk = vecAngle(trunk, arm);
+  const ang = angle2d(hip, sh, el);
+  const ref = { x: sh.x, y: sh.y + 0.3 };
+  const abd = angle2d(ref, sh, el);
+  const dx = Math.abs(el.x - sh.x);   // desplazamiento horizontal del codo
+  const dy = Math.abs(el.y - sh.y);   // desplazamiento vertical del codo
+  // EXTENSIÓN 
+  //codo baja recto= dx=0.02  dy=0.10 → 0.02 < 0.05 
+  if (el.y > sh.y + 0.02 && dx < dy * 0.5) {
+    const ext = 180 - ang;
+    if (ext < THR || ext > PHYS.extension_hombro) return [null, 0];
+    return ['extension_hombro', ext];
+  }
+  // FLEXIÓN: movimiento más vertical que lateral
+  if (el.y < sh.y - 0.01 && dx < dy * 0.6) {
+    if (ang > PHYS.flexion_hombro) return [null, 0];
+    return ['flexion_hombro', ang];
+  }
   // ABDUCCIÓN: movimiento más lateral que vertical
-  if (Math.abs(dx) > Math.abs(dy) * 0.7) {
-    const ref = { x: sh.x, y: sh.y + 0.3 };
-    const abd = angle2d(ref, sh, el);
-    if (abd < THR || abd > PHYS.abduccion_hombro) return [null, 0];
+  if (abd > 8 && dx > dy * 0.6) {
+    if (abd > PHYS.abduccion_hombro) return [null, 0];
     return ['abduccion_hombro', abd];
   }
-  // FLEXIÓN: codo sube (dy negativo)
-// FLEXIÓN: codo sube (dy negativo)
-  if (dy <= 0) {
-    if (angTrunk < 10 || angTrunk > PHYS.flexion_hombro) return [null, 0];
-    return ['flexion_hombro', angTrunk];
-  }
-  // EXTENSIÓN: codo baja con movimiento estrecho
-  //if (dy > 0 && Math.abs(dx) < Math.abs(dy) * 0.6) {
-    //if (angTrunk < 10 || angTrunk > PHYS.extension_hombro) return [null, 0];
-    //return ['extension_hombro', angTrunk];
- // }
   return [null, 0];
 }
+// CODO
+//function analyzeElbow(sh, el, wr) {
+//  const flex = 180 - angle2d(sh, el, wr);
+//  if (flex < 0 || flex > PHYS.flexion_codo) return [null, 0];
+//  if (flex > THR) return ['flexion_codo', flex];
+//  if (flex < 8)   return ['extension_codo', 0];
+//  return [null, 0];
+//}
 // CODO
 const _elbowBaseline = { derecho: null, izquierdo: null };
 const _elbowBaseFrames = { derecho: [], izquierdo: [] };
 function analyzeElbow(sh, el, wr, side) {
-  const raw = angle2d(sh, el, wr);
-  // Calibrar baseline con primeros 30 frames (Tabla 18)
+  const raw = 180 - angle2d(sh, el, wr);
+  // Calibrar baseline con primeros 30 frames
   if (_elbowBaseline[side] === null) {
     _elbowBaseFrames[side].push(raw);
     if (_elbowBaseFrames[side].length >= 30) {
@@ -491,10 +498,10 @@ function analyzeElbow(sh, el, wr, side) {
     }
     return [null, 0];
   }
-  const flex = _elbowBaseline[side] - raw;
-  if (flex > PHYS.flexion_codo) return [null, 0];
-  if (flex > 8)  return ['flexion_codo', flex];
-  if (flex < -8) return ['extension_codo', Math.abs(flex)];
+  const flex = raw - _elbowBaseline[side];
+  if (flex < 0 || flex > PHYS.flexion_codo) return [null, 0];
+  if (flex > THR) return ['flexion_codo', flex];
+  if (flex < 8)   return ['extension_codo', 0];
   return [null, 0];
 }
 function analyzeHip(sh, hip, kn, side) {
@@ -523,7 +530,7 @@ function analyzeHip(sh, hip, kn, side) {
   }
   // EXTENSIÓN (rodilla detrás de la cadera)
   // tronco casi vertical (no es una sentadilla)
-  const ext = (kn.y > hip.y && trunkAng < 25 && dx < dy * 0.4) ? va : 0;
+  const ext = (kn.y > hip.y && trunkAng < 15 && dx < dy * 0.3) ? va : 0;
   //abducción, flexión, extensión
   if (abd > THR && abd >= flex && abd >= ext) {
     if (abd > PHYS.abduccion_cadera) return [null, 0];
@@ -544,47 +551,35 @@ function analyzeKnee(hip, kn, an) {
   const ll  = [an.x  - kn.x, an.y  - kn.y];
   const ang = vecAngle(ul, ll);
   const flex = 180 - ang;
-  if (flex > PHYS.flexion_rodilla) return [null, 0];
-  if (flex > 8)  return ['flexion_rodilla', flex];
-  if (flex < -8) return ['extension_rodilla', Math.abs(flex)];
-  if (flex >= 0 && flex <= 8) return [null, 0];
-  return [null, 0];
+  if (flex < 0 || flex > PHYS.flexion_rodilla) return [null, 0];
+  if (flex > THR) return ['flexion_rodilla', flex];
+  return ['extension_rodilla', ang > 160 ? 0 : flex];
 }
 // Estado previo de por lado para filtro de delta
 // TOBILLO
-const _ankleLastAng    = { derecho: 0, izquierdo: 0 };
-const _ankleBaseline   = { derecho: null, izquierdo: null };
-const _ankleBaseFrames = { derecho: [], izquierdo: [] };
+const _ankleLastAng = { derecho: 0, izquierdo: 0 };
 function analyzeAnkle(kn, an, side) {
   const px = kn.x - an.x;
   const py = kn.y - an.y;
   if (Math.hypot(px, py) < 0.02) return [null, 0];
-  const ang = vecAngle([px, py], [0, -1]);
-  // Calibrar baseline con primeros 30 frames
-  if (_ankleBaseline[side] === null) {
-    _ankleBaseFrames[side].push(ang);
-    if (_ankleBaseFrames[side].length >= 30) {
-      const sum = _ankleBaseFrames[side].reduce((a, b) => a + b, 0);
-      _ankleBaseline[side] = sum / _ankleBaseFrames[side].length;
-    }
-    return [null, 0];
-  }
-  // Ángulo relativo al reposo calibrado
-  const rel  = ang - _ankleBaseline[side];
+  const ang  = vecAngle([px, py], [0, -1]);
   const last = _ankleLastAng[side];
-  // Filtros originales Tabla 18 — sin tocar
-  if (Math.abs(rel - last) > 12) { _ankleLastAng[side] = last; return [null, 0]; }
-  if (Math.abs(rel - last) < 5)  { return [null, 0]; }
-  if (Math.abs(px) < 0.03)       { return [null, 0]; }
-  if (Math.abs(rel) < 8)         { return [null, 0]; }
-  _ankleLastAng[side] = rel;
-  if (px > 0 && rel >= 8) {
-    if (rel > PHYS.dorsiflexion_tobillo) return [null, 0];
-    return ['dorsiflexion_tobillo', rel];
+  // Descarta saltos > 12° entre frames (ruido)
+  if (Math.abs(ang - last) > 12) { _ankleLastAng[side] = last; return [null, 0]; }
+  // Descarta reposo
+  if (Math.abs(ang - last) < 5)  { return [null, 0]; }
+  // Descarta ángulos pequeños y movimiento horizontal mínimo
+  if (Math.abs(px) < 0.03) return [null, 0];
+  if (ang < 8) return [null, 0];
+  // Solo actualiza last si pasó todos los filtros
+  _ankleLastAng[side] = ang;
+  if (px > 0 && ang >= 8) {
+    if (ang > PHYS.dorsiflexion_tobillo) return [null, 0];
+    return ['dorsiflexion_tobillo', ang];
   }
-  if (px < 0 && rel >= 8) {
-    if (rel > PHYS.flexion_plantar_tobillo) return [null, 0];
-    return ['flexion_plantar_tobillo', rel];
+  if (px < 0 && ang >= 8) {
+    if (ang > PHYS.flexion_plantar_tobillo) return [null, 0];
+    return ['flexion_plantar_tobillo', ang];
   }
   return [null, 0];
 }
@@ -709,10 +704,10 @@ function resetSession() {
   jData = mkState(); registro = []; movs = mkMovs();
   sesStart = null; ticks = 0;
   _ankleLastAng.derecho = 0; _ankleLastAng.izquierdo = 0;
-  _ankleBaseline.derecho = null; _ankleBaseline.izquierdo = null;
-  _ankleBaseFrames.derecho = []; _ankleBaseFrames.izquierdo = [];
-  _elbowBaseline.derecho = null; _elbowBaseline.izquierdo = null;
-  _elbowBaseFrames.derecho = []; _elbowBaseFrames.izquierdo = [];
+  _elbowBaseline.derecho = null;
+  _elbowBaseline.izquierdo = null;
+  _elbowBaseFrames.derecho = [];
+  _elbowBaseFrames.izquierdo = [];
   toast('🔄 Reset completo');
 }
 async function updateSes(id, p, n) { await apiPatch(id, { paciente: p, notas: n }); }
