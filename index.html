@@ -466,9 +466,8 @@ function analyzeShoulder(sh, el, hip) {
     if (ext < 15 || ext > PHYS.extension_hombro) return [null, 0];
     return ['extension_hombro', ext];
   }
-  // FLEXIÓN: movimiento más vertical que lateral
-  // FLEXIÓN: codo por encima del hombro
-   if (el.y < sh.y + 0.15 && dx < dy * 0.7) {
+  // FLEXIÓN: codo sube hacia adelante (por debajo o encima del hombro)
+    if (el.y < sh.y + 0.15 && dx < dy * 0.6) {
     if (ang < THR || ang > PHYS.flexion_hombro) return [null, 0];
     return ['flexion_hombro', ang];
   }
