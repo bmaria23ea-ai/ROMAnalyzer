@@ -467,15 +467,25 @@ function analyzeShoulder(sh, el, hip) {
     return ['extension_hombro', ext];
   }
   // FLEXIÓN: codo sube hacia adelante (por debajo o encima del hombro)
-    if (el.y < sh.y + 0.15 && dx < dy * 0.6) {
+// Detectar postura
+  const bodyDx = Math.abs(sh.x - hip.x);
+  const bodyDy = Math.abs(sh.y - hip.y);
+  const dePerfil = bodyDx > bodyDy * 0.4;
+  // FLEXIÓN de frente: solo si no está de perfil
+  if (!dePerfil && el.y < sh.y + 0.15 && dx < dy * 0.6) {
     if (ang < THR || ang > PHYS.flexion_hombro) return [null, 0];
     return ['flexion_hombro', ang];
   }
-  // ABDUCCIÓN: movimiento más lateral que vertical
-  // ABDUCCIÓN: movimiento más lateral que vertical
-  if (abd > 8 && dx > dy * 0.6) {
+  // ABDUCCIÓN: solo de frente
+  if (!dePerfil && abd > 8 && dx > dy * 0.6) {
     if (abd > PHYS.abduccion_hombro) return [null, 0];
     return ['abduccion_hombro', abd];
+  }
+  // FLEXIÓN de perfil
+  if (dePerfil && el.y < sh.y + 0.15) {
+    const flex = vecAngle([0, 1], [el.x - sh.x, el.y - sh.y]);
+    if (flex < THR || flex > PHYS.flexion_hombro) return [null, 0];
+    return ['flexion_hombro', flex];
   }
   return [null, 0];
 }
