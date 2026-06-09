@@ -470,9 +470,9 @@ function analyzeShoulder(sh, el, hip) {
     return ['flexion_hombro', ang];
   }
   // ABDUCCIÓN: movimiento más lateral que vertical
-  if (abd > 8 && dx > dy * 0.6) {
-    if (abd > PHYS.abduccion_hombro) return [null, 0];
-    return ['abduccion_hombro', abd];
+  if (dx < dy * 0.6) {
+    if (ang < THR || ang > PHYS.flexion_hombro) return [null, 0];
+    return ['flexion_hombro', ang];
   }
   return [null, 0];
 }
