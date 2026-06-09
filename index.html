@@ -452,7 +452,7 @@ const META = {
 };
 //ANÁLISIS DE ARTICULACIONES
 function analyzeShoulder(sh, el, hip) {
-  const trunk = [sh.x - hip.x, sh.y - hip.y];
+  const trunk = [hip.x - sh.x, hip.y - sh.y];
   const arm   = [el.x - sh.x,  el.y - sh.y];
   const dx = el.x - sh.x;
   const dy = el.y - sh.y;
