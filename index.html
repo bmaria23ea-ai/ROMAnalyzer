@@ -480,19 +480,11 @@ function analyzeShoulder(sh, el, hip) {
   return [null, 0];
 }
 // CODO
-//function analyzeElbow(sh, el, wr) {
-//  const flex = 180 - angle2d(sh, el, wr);
-//  if (flex < 0 || flex > PHYS.flexion_codo) return [null, 0];
-//  if (flex > THR) return ['flexion_codo', flex];
-//  if (flex < 8)   return ['extension_codo', 0];
-//  return [null, 0];
-//}
-// CODO
 const _elbowBaseline = { derecho: null, izquierdo: null };
 const _elbowBaseFrames = { derecho: [], izquierdo: [] };
+const _elbowLastFlex = { derecho: 0, izquierdo: 0 };
 function analyzeElbow(sh, el, wr, side) {
   const raw = 180 - angle2d(sh, el, wr);
-  // Calibrar baseline con primeros 30 frames
   if (_elbowBaseline[side] === null) {
     _elbowBaseFrames[side].push(raw);
     if (_elbowBaseFrames[side].length >= 30) {
@@ -503,8 +495,11 @@ function analyzeElbow(sh, el, wr, side) {
   }
   const flex = raw - _elbowBaseline[side];
   if (flex < 0 || flex > PHYS.flexion_codo) return [null, 0];
+  const last = _elbowLastFlex[side];
+  _elbowLastFlex[side] = flex;
+  if (flex < 8) return ['extension_codo', flex];
+  if (flex < last - 2) return ['extension_codo', flex];
   if (flex > THR) return ['flexion_codo', flex];
-  if (flex >= 0 && flex < 8) return ['extension_codo', flex];
   return [null, 0];
 }
 function analyzeHip(sh, hip, kn, side) {
@@ -711,6 +706,8 @@ function resetSession() {
   _elbowBaseline.izquierdo = null;
   _elbowBaseFrames.derecho = [];
   _elbowBaseFrames.izquierdo = [];
+  _elbowLastFlex.derecho = 0;
+  _elbowLastFlex.izquierdo = 0;
   toast('🔄 Reset completo');
 }
 async function updateSes(id, p, n) { await apiPatch(id, { paciente: p, notas: n }); }
