@@ -471,10 +471,10 @@ function analyzeShoulder(sh, el, hip) {
     return ['flexion_hombro', angTrunk];
   }
   // EXTENSIÓN: codo baja con movimiento estrecho
-  if (dy > 0 && Math.abs(dx) < Math.abs(dy) * 0.6) {
-    if (angTrunk < 10 || angTrunk > PHYS.extension_hombro) return [null, 0];
-    return ['extension_hombro', angTrunk];
-  }
+  //if (dy > 0 && Math.abs(dx) < Math.abs(dy) * 0.6) {
+    //if (angTrunk < 10 || angTrunk > PHYS.extension_hombro) return [null, 0];
+    //return ['extension_hombro', angTrunk];
+ // }
   return [null, 0];
 }
 // CODO
