@@ -461,7 +461,7 @@ function analyzeShoulder(sh, el, hip) {
   //codo baja recto= dx=0.02  dy=0.10 → 0.02 < 0.05 
   if (el.y > sh.y + 0.02 && dx < dy * 0.5) {
     const ext = 180 - ang;
-    if (ext < THR || ext > PHYS.extension_hombro) return [null, 0];
+    if (ext < 15 || ext > PHYS.extension_hombro) return [null, 0];
     return ['extension_hombro', ext];
   }
   // FLEXIÓN: movimiento más vertical que lateral
