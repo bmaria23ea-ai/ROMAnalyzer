@@ -462,6 +462,7 @@ function analyzeShoulder(sh, el, hip) {
   const plane = Math.abs(vy/n) > 0.55 ? 'sagital' : Math.abs(vx/n) > 0.55 ? 'frontal' : 'mixto';
   // EXTENSIÓN: codo baja hacia atrás
   const behind = (el.z - sh.z) > 0.15;
+  console.log('plane:', plane, 'behind:', behind, 'el.z-sh.z:', (el.z-sh.z).toFixed(3), 'ang:', ang.toFixed(1));
   if (behind && plane === 'sagital' && el.y > sh.y - 0.05) {
     const ext = Math.max(0, Math.min(60, ang * 0.6));
     if (ext < 15 || ext > PHYS.extension_hombro) return [null, 0];
