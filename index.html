@@ -457,7 +457,6 @@ function analyzeShoulder(sh, el, hip, side) {
   const ba = [hip.x - sh.x, hip.y - sh.y, (hip.z || 0) - (sh.z || 0)];
   const bc = [el.x  - sh.x, el.y  - sh.y, (el.z  || 0) - (sh.z || 0)];
   const angRaw = vecAngle(ba, bc);
-  console.log('plane:', plane, 'behind:', behind, 'el.z-sh.z:', (el.z-sh.z).toFixed(3), 'ang:', ang.toFixed(1));
   if (_shoulderBaseline[side] === null) {
     _shoulderBaseFrames[side].push(angRaw);
     if (_shoulderBaseFrames[side].length >= 30) {
@@ -466,6 +465,7 @@ function analyzeShoulder(sh, el, hip, side) {
     return [null, 0];
   }
   const ang = Math.max(0, angRaw - _shoulderBaseline[side]);
+  console.log(`side=${side} angRaw=${angRaw.toFixed(1)} baseline=${_shoulderBaseline[side].toFixed(1)} ang=${ang.toFixed(1)} plane=${plane} el.y-sh.y=${(el.y-sh.y).toFixed(3)}`);
   const vx = el.x - sh.x, vy = el.y - sh.y, vz = (el.z || 0) - (sh.z || 0);
   const n  = Math.sqrt(vx*vx + vy*vy + vz*vz) + 1e-6;
   const plane = Math.abs(vy/n) > 0.55 ? 'sagital' : Math.abs(vx/n) > 0.55 ? 'frontal' : 'mixto';
