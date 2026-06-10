@@ -465,6 +465,7 @@ const angRaw = vecAngle(bc, vertical);
     return [null, 0];
   }
   const ang = Math.max(0, angRaw - _shoulderBaseline[side]);
+  console.log(`[${side}] angRaw=${angRaw.toFixed(1)} bl=${_shoulderBaseline[side].toFixed(1)} ang=${ang.toFixed(1)}`);
   const vx = el.x - sh.x, vy = el.y - sh.y, vz = (el.z || 0) - (sh.z || 0);
   const n  = Math.sqrt(vx*vx + vy*vy + vz*vz) + 1e-6;
   const plane = Math.abs(vy/n) > 0.55 ? 'sagital' : Math.abs(vx/n) > 0.55 ? 'frontal' : 'mixto';
