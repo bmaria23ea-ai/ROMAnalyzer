@@ -523,7 +523,6 @@ function analyzeHip(sh, hip, kn, side) {
   // rodilla se va al lado con poco componente vertical
   const dx = Math.abs(kn.x - hip.x);
   const dy = Math.abs(kn.y - hip.y);
-  console.log(`[cadera-${side}] va=${va.toFixed(1)} trunkAng=${trunkAng.toFixed(1)} dx=${dx.toFixed(3)} dy=${dy.toFixed(3)} kn.y=${kn.y.toFixed(3)} hip.y=${hip.y.toFixed(3)}`);
   let abd = 0;
   if (dx > dy * 0.8) {
     if (side === 'derecho'   && kn.x < hip.x) abd = va;
@@ -549,7 +548,10 @@ function analyzeHip(sh, hip, kn, side) {
   }
   if (flex > 25 && flex >= ext) {
     if (flex > PHYS.flexion_cadera) return [null, 0];
-    return ['flexion_cadera', flex];
+    const lastH = _hipLastFlex[side];
+    _hipLastFlex[side] = flex;
+    if (flex >= lastH - 2) return ['flexion_cadera', flex];
+    return ['extension_cadera', flex];
   }
   if (ext > THR) {
     if (ext > PHYS.extension_cadera) return [null, 0];
@@ -557,17 +559,20 @@ function analyzeHip(sh, hip, kn, side) {
   }
   return [null, 0];
 }
-function analyzeKnee(hip, kn, an) {
+function analyzeKnee(hip, kn, an, side) {
   const ul  = [hip.x - kn.x, hip.y - kn.y];
   const ll  = [an.x  - kn.x, an.y  - kn.y];
   const ang = vecAngle(ul, ll);
   const flex = 180 - ang;
-  console.log(`[rodilla] ang=${ang.toFixed(1)} flex=${flex.toFixed(1)}`);
   if (flex < 0 || flex > PHYS.flexion_rodilla) return [null, 0];
-  if (flex > 15) return ['flexion_rodilla', flex];
-  if (flex > 0)  return ['extension_rodilla', flex];
+  const last = _kneeLastFlex[side];
+  _kneeLastFlex[side] = flex;
+  if (flex > 15 && flex >= last - 2) return ['flexion_rodilla', flex];
+  if (flex > 15 && flex <  last - 2) return ['extension_rodilla', flex];
   return [null, 0];
 }
+const _kneeLastFlex = { derecho: 0, izquierdo: 0 };
+const _hipLastFlex  = { derecho: 0, izquierdo: 0 };
 // Estado previo de por lado para filtro de delta
 // TOBILLO
 const _ankleLastAng = { derecho: 0, izquierdo: 0 };
@@ -723,6 +728,10 @@ function resetSession() {
   _elbowBaseFrames.izquierdo = [];
   _elbowLastFlex.derecho = 0;
   _elbowLastFlex.izquierdo = 0;
+  _kneeLastFlex.derecho = 0;
+  _kneeLastFlex.izquierdo = 0;
+  _hipLastFlex.derecho = 0;
+  _hipLastFlex.izquierdo = 0;
   toast('🔄 Reset completo');
 }
 async function updateSes(id, p, n) { await apiPatch(id, { paciente: p, notas: n }); }
@@ -799,7 +808,7 @@ function onResults(res) {
       updateJoint(side, 'cadera', ex || 'reposo', ang);
     }
     if (vis('hip') && vis('kn') && vis('an')) {
-      const [ex, ang] = analyzeKnee(p.hip, p.kn, p.an);
+      const [ex, ang] = analyzeKnee(p.hip, p.kn, p.an, side);
       updateJoint(side, 'rodilla', ex || 'reposo', ang);
     }
     if (vis('kn') && vis('an')) {
