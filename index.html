@@ -454,9 +454,9 @@ const META = {
 const _shoulderBaseline = { derecho: null, izquierdo: null };
 const _shoulderBaseFrames = { derecho: [], izquierdo: [] };
 function analyzeShoulder(sh, el, hip, side) {
-const ba = [hip.x - sh.x, hip.y - sh.y, (hip.z || 0) - (sh.z || 0)];
-const bc = [el.x  - sh.x, el.y  - sh.y, (el.z  || 0) - (sh.z || 0)];
-const angRaw = vecAngle(ba, bc);
+const vx = el.x - sh.x, vy = el.y - sh.y, vz = (el.z||0) - (sh.z||0);
+  const n  = Math.sqrt(vx*vx + vy*vy + vz*vz) + 1e-6;
+  const angRaw = DEG(Math.acos(Math.max(-1, Math.min(1, vy / n))));
   if (_shoulderBaseline[side] === null) {
     _shoulderBaseFrames[side].push(angRaw);
     if (_shoulderBaseFrames[side].length >= 30) {
@@ -464,10 +464,7 @@ const angRaw = vecAngle(ba, bc);
     }
     return [null, 0];
   }
-const ang = Math.max(0, angRaw - _shoulderBaseline[side]);
-  console.log(`[${side}] angRaw=${angRaw.toFixed(1)} bl=${_shoulderBaseline[side].toFixed(1)} ang=${ang.toFixed(1)}`);
-  const vx = el.x - sh.x, vy = el.y - sh.y, vz = (el.z || 0) - (sh.z || 0);
-  const n  = Math.sqrt(vx*vx + vy*vy + vz*vz) + 1e-6;
+  const ang = Math.max(0, angRaw - _shoulderBaseline[side]);
   const plane = Math.abs(vy/n) > 0.55 ? 'sagital' : Math.abs(vx/n) > 0.55 ? 'frontal' : 'mixto';
   const behind = (el.z - sh.z) > 0.18;
   console.log(`[${side}] angRaw=${angRaw.toFixed(1)} bl=${_shoulderBaseline[side].toFixed(1)} ang=${ang.toFixed(1)} plane=${plane}`);
