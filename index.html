@@ -473,12 +473,12 @@ function analyzeShoulder(sh, el, hip) {
   const dePerfil = bodyDx > bodyDy * 0.8;
   console.log(`[hombro] ang=${ang.toFixed(1)} dePerfil=${dePerfil} bodyDx=${bodyDx.toFixed(3)} bodyDy=${bodyDy.toFixed(3)} dx=${dx.toFixed(3)} dy=${dy.toFixed(3)}`);
   // FLEXIÓN de frente: solo si no está de perfil
-    if (!dePerfil && ang > 10 && dx <= dy) {
+    if (!dePerfil && ang > 10 && el.y < sh.y + 0.05) {
     if (ang < THR || ang > PHYS.flexion_hombro) return [null, 0];
     return ['flexion_hombro', ang];
   }
   // ABDUCCIÓN: solo de frente
-  if (!dePerfil && abd > 8 && dx > dy * 0.6) {
+  if (!dePerfil && abd > 8 && el.y >= sh.y - 0.05) {
     if (abd > PHYS.abduccion_hombro) return [null, 0];
     return ['abduccion_hombro', abd];
   }
