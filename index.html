@@ -451,7 +451,7 @@ const META = {
   flexion_plantar_tobillo: { n: 'Flex.Plantar', r: 'inferior' },
 };
 //ANÁLISIS DE ARTICULACIONES
-function analyzeShoulder(sh, el, hip, lastExercise) {
+function analyzeShoulder(sh, el, hip) {
   const trunk = [hip.x - sh.x, hip.y - sh.y];
   const arm   = [el.x  - sh.x, el.y  - sh.y];
   const ang   = vecAngle(trunk, arm);
@@ -795,11 +795,10 @@ function onResults(res) {
     const vis = k => (p[k].visibility || 0) > VIS;
 
     if (vis('sh') && vis('el') && vis('hip')) {
-      const [ex, ang] = analyzeShoulder(p.sh, p.el, p.hip, jData[side].hombro.exercise);
+      const [ex, ang] = analyzeShoulder(p.sh, p.el, p.hip);
       updateJoint(side, 'hombro', ex || 'reposo', ang);
     }
     if (vis('sh') && vis('el') && vis('wr')) {
-      //const [ex, ang] = analyzeElbow(p.sh, p.el, p.wr);
       const [ex, ang] = analyzeElbow(p.sh, p.el, p.wr, side);
       updateJoint(side, 'codo', ex || 'reposo', ang);
     }
