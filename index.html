@@ -464,7 +464,7 @@ const angRaw = DEG(Math.atan2(-dy, Math.abs(dx) < 0.01 ? 0.001 : Math.abs(dx) + 
     }
     return [null, 0];
   }
-  const ang = Math.max(0, angRaw - _shoulderBaseline[side]);
+ const ang = angRaw;
   console.log(`[${side}] angRaw=${angRaw.toFixed(1)} bl=${_shoulderBaseline[side].toFixed(1)} ang=${ang.toFixed(1)}`);
   const vx = el.x - sh.x, vy = el.y - sh.y, vz = (el.z || 0) - (sh.z || 0);
   const n  = Math.sqrt(vx*vx + vy*vy + vz*vz) + 1e-6;
@@ -477,7 +477,7 @@ const angRaw = DEG(Math.atan2(-dy, Math.abs(dx) < 0.01 ? 0.001 : Math.abs(dx) + 
     return ['extension_hombro', ext];
   }
   if (plane === 'sagital' || plane === 'mixto') {
-    if (ang > 10) {
+    if (ang > _shoulderBaseline[side] + 15) {
       if (ang > PHYS.flexion_hombro) return [null, 0];
       return ['flexion_hombro', ang];
     }
