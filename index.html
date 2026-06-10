@@ -497,21 +497,24 @@ function analyzeShoulder(sh, el, hip, side) {
 // CODO
 const _elbowBaseline = { derecho: null, izquierdo: null };
 const _elbowBaseFrames = { derecho: [], izquierdo: [] };
+const _elbowLastFlex = { derecho: 0, izquierdo: 0 };
 function analyzeElbow(sh, el, wr, side) {
   const raw = 180 - angle2d(sh, el, wr);
-  // Calibrar baseline con primeros 30 frames
   if (_elbowBaseline[side] === null) {
     _elbowBaseFrames[side].push(raw);
     if (_elbowBaseFrames[side].length >= 30) {
-      const sum = _elbowBaseFrames[side].reduce((a, b) => a + b, 0);
-      _elbowBaseline[side] = sum / _elbowBaseFrames[side].length;
+      _elbowBaseline[side] = _elbowBaseFrames[side].reduce((a,b)=>a+b,0) / 30;
     }
     return [null, 0];
   }
-const flex = raw - _elbowBaseline[side];
+  const flex = raw - _elbowBaseline[side];
   if (flex > PHYS.flexion_codo) return [null, 0];
-  if (flex > 0) return ['flexion_codo', flex];
-  return ['extension_codo', 0];
+  if (flex < 0) { _elbowLastFlex[side] = 0; return ['extension_codo', 0]; }
+  const delta = flex - _elbowLastFlex[side];
+  _elbowLastFlex[side] = flex;
+  if (flex < 5) return [null, 0];
+  if (delta < -1) return ['extension_codo', flex];
+  return ['flexion_codo', flex];
 }
 function analyzeHip(sh, hip, kn, side) {
   const trunk = [sh.x - hip.x, sh.y - hip.y];
