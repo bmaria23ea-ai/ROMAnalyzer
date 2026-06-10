@@ -724,6 +724,8 @@ function resetSession() {
   _shoulderBaseline.izquierdo = null;
   _shoulderBaseFrames.derecho = [];
   _shoulderBaseFrames.izquierdo = [];
+  _elbowLastFlex.derecho = 0;
+  _elbowLastFlex.izquierdo = 0;
   toast('🔄 Reset completo');
 }
 async function updateSes(id, p, n) { await apiPatch(id, { paciente: p, notas: n }); }
