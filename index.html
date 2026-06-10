@@ -473,7 +473,7 @@ function analyzeShoulder(sh, el, hip) {
   const dePerfil = bodyDx > bodyDy * 0.8;
   console.log(`[hombro] ang=${ang.toFixed(1)} dePerfil=${dePerfil} bodyDx=${bodyDx.toFixed(3)} bodyDy=${bodyDy.toFixed(3)} dx=${dx.toFixed(3)} dy=${dy.toFixed(3)}`);
   // FLEXIÓN de frente: solo si no está de perfil
-   if (!dePerfil && ang > 10) {
+    if (!dePerfil && ang > 10 && dx <= dy) {
     if (ang < THR || ang > PHYS.flexion_hombro) return [null, 0];
     return ['flexion_hombro', ang];
   }
