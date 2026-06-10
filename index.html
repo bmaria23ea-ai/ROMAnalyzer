@@ -454,8 +454,9 @@ const META = {
 const _shoulderBaseline = { derecho: null, izquierdo: null };
 const _shoulderBaseFrames = { derecho: [], izquierdo: [] };
 function analyzeShoulder(sh, el, hip, side) {
-const bc = [el.x - sh.x, el.y - sh.y, (el.z || 0) - (sh.z || 0)];
-const angRaw = vecAngle(bc, [0, 1, 0]);
+const ba = [hip.x - sh.x, hip.y - sh.y, (hip.z || 0) - (sh.z || 0)];
+const bc = [el.x  - sh.x, el.y  - sh.y, (el.z  || 0) - (sh.z || 0)];
+const angRaw = vecAngle(ba, bc);
   if (_shoulderBaseline[side] === null) {
     _shoulderBaseFrames[side].push(angRaw);
     if (_shoulderBaseFrames[side].length >= 30) {
@@ -463,7 +464,7 @@ const angRaw = vecAngle(bc, [0, 1, 0]);
     }
     return [null, 0];
   }
- const ang = angRaw;
+const ang = Math.max(0, angRaw - _shoulderBaseline[side]);
   console.log(`[${side}] angRaw=${angRaw.toFixed(1)} bl=${_shoulderBaseline[side].toFixed(1)} ang=${ang.toFixed(1)}`);
   const vx = el.x - sh.x, vy = el.y - sh.y, vz = (el.z || 0) - (sh.z || 0);
   const n  = Math.sqrt(vx*vx + vy*vy + vz*vz) + 1e-6;
@@ -476,7 +477,7 @@ const angRaw = vecAngle(bc, [0, 1, 0]);
     return ['extension_hombro', ext];
   }
   if (plane === 'sagital' || plane === 'mixto') {
-    if (ang > _shoulderBaseline[side] + 15) {
+    if (ang > 15) {
       if (ang > PHYS.flexion_hombro) return [null, 0];
       return ['flexion_hombro', ang];
     }
