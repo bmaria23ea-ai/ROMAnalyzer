@@ -476,7 +476,7 @@ const angRaw = vecAngle(bc, vertical);
     return ['extension_hombro', ext];
   }
   if (plane === 'sagital' || plane === 'mixto') {
-    if (ang > 15 && el.y < sh.y + 0.15) {
+    if (ang > 10) {
       if (ang > PHYS.flexion_hombro) return [null, 0];
       return ['flexion_hombro', ang];
     }
