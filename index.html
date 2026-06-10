@@ -472,7 +472,7 @@ function analyzeShoulder(sh, el, hip) {
   const bodyDy = Math.abs(sh.y - hip.y);
   const dePerfil = bodyDx > bodyDy * 0.4;
   // FLEXIÓN de frente: solo si no está de perfil
-  if (!dePerfil && el.y < sh.y + 0.15 && dx < dy * 0.6) {
+  if (!dePerfil && el.y < sh.y + 0.15) {
     if (ang < THR || ang > PHYS.flexion_hombro) return [null, 0];
     return ['flexion_hombro', ang];
   }
@@ -482,7 +482,7 @@ function analyzeShoulder(sh, el, hip) {
     return ['abduccion_hombro', abd];
   }
   // FLEXIÓN de perfil
-  if (dePerfil && el.y < sh.y + 0.15) {
+  if (dePerfil) {
     const flex = vecAngle([0, 1], [el.x - sh.x, el.y - sh.y]);
     if (flex < THR || flex > PHYS.flexion_hombro) return [null, 0];
     return ['flexion_hombro', flex];
