@@ -480,7 +480,7 @@ function analyzeShoulder(sh, el, hip, lastExercise) {
     return ['flexion_hombro', ang];
   }
   // ABDUCCIÓN: solo de frente
-  const codoLejosCadera = Math.abs(el.x - hip.x) > 0.15;
+  const codoLejosCadera = Math.abs(el.x - hip.x) > 0.18;
   if (!dePerfil && abd > 8 && codoLejosCadera) {
     if (abd > PHYS.abduccion_hombro) return [null, 0];
     return ['abduccion_hombro', abd];
