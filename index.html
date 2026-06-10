@@ -451,35 +451,39 @@ const META = {
   flexion_plantar_tobillo: { n: 'Flex.Plantar', r: 'inferior' },
 };
 //ANÁLISIS DE ARTICULACIONES
-function analyzeShoulder(sh, el, hip) {
-  // Ángulo 3D tronco→hombro→codo
+const _shoulderBaseline = { derecho: null, izquierdo: null };
+const _shoulderBaseFrames = { derecho: [], izquierdo: [] };
+function analyzeShoulder(sh, el, hip, side) {
   const ba = [hip.x - sh.x, hip.y - sh.y, (hip.z || 0) - (sh.z || 0)];
   const bc = [el.x  - sh.x, el.y  - sh.y, (el.z  || 0) - (sh.z || 0)];
-  const ang = vecAngle(ba, bc);
-  // Detectar plano por componente dominante del vector brazo
+  const angRaw = vecAngle(ba, bc);
+  if (_shoulderBaseline[side] === null) {
+    _shoulderBaseFrames[side].push(angRaw);
+    if (_shoulderBaseFrames[side].length >= 30) {
+      _shoulderBaseline[side] = _shoulderBaseFrames[side].reduce((a,b)=>a+b,0) / 30;
+    }
+    return [null, 0];
+  }
+  const ang = Math.max(0, angRaw - _shoulderBaseline[side]);
   const vx = el.x - sh.x, vy = el.y - sh.y, vz = (el.z || 0) - (sh.z || 0);
   const n  = Math.sqrt(vx*vx + vy*vy + vz*vz) + 1e-6;
   const plane = Math.abs(vy/n) > 0.55 ? 'sagital' : Math.abs(vx/n) > 0.55 ? 'frontal' : 'mixto';
-  // EXTENSIÓN: codo baja hacia atrás
-  const behind = (el.z - sh.z) > 0.15;
-  console.log('plane:', plane, 'behind:', behind, 'el.z-sh.z:', (el.z-sh.z).toFixed(3), 'ang:', ang.toFixed(1));
+  const behind = (el.z - sh.z) > 0.18;
   if (behind && plane === 'sagital' && el.y > sh.y - 0.05) {
     const ext = Math.max(0, Math.min(60, ang * 0.6));
     if (ext < 15 || ext > PHYS.extension_hombro) return [null, 0];
     return ['extension_hombro', ext];
   }
-  // FLEXIÓN: plano sagital o mixto
   if (plane === 'sagital' || plane === 'mixto') {
     if (ang > 15 && el.y < sh.y + 0.15) {
       if (ang > PHYS.flexion_hombro) return [null, 0];
       return ['flexion_hombro', ang];
     }
   }
-  // ABDUCCIÓN: plano frontal o mixto
   if (plane === 'frontal' || plane === 'mixto') {
     const ref = { x: sh.x, y: sh.y + 0.3, z: sh.z || 0 };
     const abd = vecAngle(
-      [ref.x - sh.x, ref.y - sh.y, (ref.z) - (sh.z || 0)],
+      [ref.x - sh.x, ref.y - sh.y, ref.z - (sh.z || 0)],
       [el.x  - sh.x, el.y  - sh.y, (el.z || 0) - (sh.z || 0)]
     );
     if (abd > 8 && Math.abs(el.x - sh.x) > Math.abs(el.y - sh.y) * 0.45) {
@@ -713,6 +717,10 @@ function resetSession() {
   _elbowBaseline.izquierdo = null;
   _elbowBaseFrames.derecho = [];
   _elbowBaseFrames.izquierdo = [];
+   _shoulderBaseline.derecho = null;
+  _shoulderBaseline.izquierdo = null;
+  _shoulderBaseFrames.derecho = [];
+  _shoulderBaseFrames.izquierdo = [];
   toast('🔄 Reset completo');
 }
 async function updateSes(id, p, n) { await apiPatch(id, { paciente: p, notas: n }); }
@@ -776,7 +784,7 @@ function onResults(res) {
     const vis = k => (p[k].visibility || 0) > VIS;
 
     if (vis('sh') && vis('el') && vis('hip')) {
-      const [ex, ang] = analyzeShoulder(p.sh, p.el, p.hip);
+     const [ex, ang] = analyzeShoulder(p.sh, p.el, p.hip, side);
       updateJoint(side, 'hombro', ex || 'reposo', ang);
     }
     if (vis('sh') && vis('el') && vis('wr')) {
