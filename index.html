@@ -523,6 +523,7 @@ function analyzeHip(sh, hip, kn, side) {
   // rodilla se va al lado con poco componente vertical
   const dx = Math.abs(kn.x - hip.x);
   const dy = Math.abs(kn.y - hip.y);
+  console.log(`[cadera-${side}] va=${va.toFixed(1)} trunkAng=${trunkAng.toFixed(1)} dx=${dx.toFixed(3)} dy=${dy.toFixed(3)} kn.y=${kn.y.toFixed(3)} hip.y=${hip.y.toFixed(3)}`);
   let abd = 0;
   if (dx > dy * 0.8) {
     if (side === 'derecho'   && kn.x < hip.x) abd = va;
@@ -561,6 +562,7 @@ function analyzeKnee(hip, kn, an) {
   const ll  = [an.x  - kn.x, an.y  - kn.y];
   const ang = vecAngle(ul, ll);
   const flex = 180 - ang;
+  console.log(`[rodilla] ang=${ang.toFixed(1)} flex=${flex.toFixed(1)}`);
   if (flex < 0 || flex > PHYS.flexion_rodilla) return [null, 0];
   if (flex > THR) return ['flexion_rodilla', flex];
   return ['extension_rodilla', ang > 160 ? 0 : flex];
