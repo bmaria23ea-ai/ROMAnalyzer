@@ -457,6 +457,7 @@ function analyzeShoulder(sh, el, hip, side) {
   const ba = [hip.x - sh.x, hip.y - sh.y, (hip.z || 0) - (sh.z || 0)];
   const bc = [el.x  - sh.x, el.y  - sh.y, (el.z  || 0) - (sh.z || 0)];
   const angRaw = vecAngle(ba, bc);
+  console.log('plane:', plane, 'behind:', behind, 'el.z-sh.z:', (el.z-sh.z).toFixed(3), 'ang:', ang.toFixed(1));
   if (_shoulderBaseline[side] === null) {
     _shoulderBaseFrames[side].push(angRaw);
     if (_shoulderBaseFrames[side].length >= 30) {
