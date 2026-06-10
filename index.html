@@ -451,41 +451,37 @@ const META = {
   flexion_plantar_tobillo: { n: 'Flex.Plantar', r: 'inferior' },
 };
 //ANÁLISIS DE ARTICULACIONES
-const _shoulderBaseline = { derecho: null, izquierdo: null };
-const _shoulderBaseFrames = { derecho: [], izquierdo: [] };
-function analyzeShoulder(sh, el, hip, side) {
-const vx = el.x - sh.x, vy = el.y - sh.y, vz = (el.z||0) - (sh.z||0);
+function analyzeShoulder(sh, el, hip) {
+  // Ángulo 3D tronco→hombro→codo
+  const ba = [hip.x - sh.x, hip.y - sh.y, (hip.z || 0) - (sh.z || 0)];
+  const bc = [el.x  - sh.x, el.y  - sh.y, (el.z  || 0) - (sh.z || 0)];
+  const ang = vecAngle(ba, bc);
+  // Detectar plano por componente dominante del vector brazo
+  const vx = el.x - sh.x, vy = el.y - sh.y, vz = (el.z || 0) - (sh.z || 0);
   const n  = Math.sqrt(vx*vx + vy*vy + vz*vz) + 1e-6;
-  const angRaw = DEG(Math.acos(Math.max(-1, Math.min(1, vy / n))));
-  if (_shoulderBaseline[side] === null) {
-    _shoulderBaseFrames[side].push(angRaw);
-    if (_shoulderBaseFrames[side].length >= 30) {
-      _shoulderBaseline[side] = _shoulderBaseFrames[side].reduce((a,b)=>a+b,0) / 30;
-    }
-    return [null, 0];
-  }
-  const ang = Math.max(0, angRaw - _shoulderBaseline[side]);
   const plane = Math.abs(vy/n) > 0.55 ? 'sagital' : Math.abs(vx/n) > 0.55 ? 'frontal' : 'mixto';
-  const behind = (el.z - sh.z) > 0.18;
-  console.log(`[${side}] angRaw=${angRaw.toFixed(1)} bl=${_shoulderBaseline[side].toFixed(1)} ang=${ang.toFixed(1)} plane=${plane}`);
-  if (behind && plane === 'sagital' && el.y > sh.y - 0.05) {
+  // EXTENSIÓN: codo baja hacia atrás
+  const behind = (el.z - sh.z) > 0.12;
+  if (behind && (el.y > sh.y + 0.08 || (plane === 'sagital' && el.y > sh.y - 0.05))) {
     const ext = Math.max(0, Math.min(60, ang * 0.6));
     if (ext < 15 || ext > PHYS.extension_hombro) return [null, 0];
     return ['extension_hombro', ext];
   }
+  // FLEXIÓN: plano sagital o mixto
   if (plane === 'sagital' || plane === 'mixto') {
-    if (ang > 15) {
+    if (ang > THR && el.y < sh.y + 0.15) {
       if (ang > PHYS.flexion_hombro) return [null, 0];
       return ['flexion_hombro', ang];
     }
   }
+  // ABDUCCIÓN: plano frontal o mixto
   if (plane === 'frontal' || plane === 'mixto') {
     const ref = { x: sh.x, y: sh.y + 0.3, z: sh.z || 0 };
     const abd = vecAngle(
-      [ref.x - sh.x, ref.y - sh.y, ref.z - (sh.z || 0)],
+      [ref.x - sh.x, ref.y - sh.y, (ref.z) - (sh.z || 0)],
       [el.x  - sh.x, el.y  - sh.y, (el.z || 0) - (sh.z || 0)]
     );
-    if (abd > 5 && Math.abs(el.x - sh.x) > Math.abs(el.y - sh.y) * 0.45) {
+    if (abd > 8 && Math.abs(el.x - sh.x) > Math.abs(el.y - sh.y) * 0.45) {
       if (abd > PHYS.abduccion_hombro) return [null, 0];
       return ['abduccion_hombro', abd];
     }
@@ -495,24 +491,22 @@ const vx = el.x - sh.x, vy = el.y - sh.y, vz = (el.z||0) - (sh.z||0);
 // CODO
 const _elbowBaseline = { derecho: null, izquierdo: null };
 const _elbowBaseFrames = { derecho: [], izquierdo: [] };
-const _elbowLastFlex = { derecho: 0, izquierdo: 0 };
 function analyzeElbow(sh, el, wr, side) {
   const raw = 180 - angle2d(sh, el, wr);
+  // Calibrar baseline con primeros 30 frames
   if (_elbowBaseline[side] === null) {
     _elbowBaseFrames[side].push(raw);
     if (_elbowBaseFrames[side].length >= 30) {
-      _elbowBaseline[side] = _elbowBaseFrames[side].reduce((a,b)=>a+b,0) / 30;
+      const sum = _elbowBaseFrames[side].reduce((a, b) => a + b, 0);
+      _elbowBaseline[side] = sum / _elbowBaseFrames[side].length;
     }
     return [null, 0];
   }
   const flex = raw - _elbowBaseline[side];
-  if (flex > PHYS.flexion_codo) return [null, 0];
-  if (flex < 0) { _elbowLastFlex[side] = 0; return ['extension_codo', 0]; }
-  const delta = flex - _elbowLastFlex[side];
-  _elbowLastFlex[side] = flex;
-  if (flex < 5) return [null, 0];
-  if (delta < -0.3) return ['extension_codo', flex];
-  return ['flexion_codo', flex];
+  if (flex < 0 || flex > PHYS.flexion_codo) return [null, 0];
+  if (flex > THR) return ['flexion_codo', flex];
+  if (flex < 8)   return ['extension_codo', 0];
+  return [null, 0];
 }
 function analyzeHip(sh, hip, kn, side) {
   const trunk = [sh.x - hip.x, sh.y - hip.y];
@@ -718,12 +712,6 @@ function resetSession() {
   _elbowBaseline.izquierdo = null;
   _elbowBaseFrames.derecho = [];
   _elbowBaseFrames.izquierdo = [];
-  _shoulderBaseline.derecho = null;
-  _shoulderBaseline.izquierdo = null;
-  _shoulderBaseFrames.derecho = [];
-  _shoulderBaseFrames.izquierdo = [];
-  _elbowLastFlex.derecho = 0;
-  _elbowLastFlex.izquierdo = 0;
   toast('🔄 Reset completo');
 }
 async function updateSes(id, p, n) { await apiPatch(id, { paciente: p, notas: n }); }
@@ -787,7 +775,7 @@ function onResults(res) {
     const vis = k => (p[k].visibility || 0) > VIS;
 
     if (vis('sh') && vis('el') && vis('hip')) {
-      const [ex, ang] = analyzeShoulder(p.sh, p.el, p.hip, side);
+      const [ex, ang] = analyzeShoulder(p.sh, p.el, p.hip);
       updateJoint(side, 'hombro', ex || 'reposo', ang);
     }
     if (vis('sh') && vis('el') && vis('wr')) {
