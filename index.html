@@ -451,7 +451,7 @@ const META = {
   flexion_plantar_tobillo: { n: 'Flex.Plantar', r: 'inferior' },
 };
 //ANÁLISIS DE ARTICULACIONES
-function analyzeShoulder(sh, el, hip) {
+function analyzeShoulder(sh, el, hip, lastExercise) {
   const trunk = [hip.x - sh.x, hip.y - sh.y];
   const arm   = [el.x  - sh.x, el.y  - sh.y];
   const ang   = vecAngle(trunk, arm);
@@ -473,7 +473,7 @@ function analyzeShoulder(sh, el, hip) {
   const dePerfil = bodyDx > bodyDy * 0.8;
   console.log(`[hombro] ang=${ang.toFixed(1)} dePerfil=${dePerfil} bodyDx=${bodyDx.toFixed(3)} bodyDy=${bodyDy.toFixed(3)} dx=${dx.toFixed(3)} dy=${dy.toFixed(3)}`);
   // FLEXIÓN de frente: solo si no está de perfil
-    if (!dePerfil && ang > 10 && el.y < sh.y + 0.05) {
+    if (!dePerfil && ang > 10 && (el.y < sh.y + 0.05 || lastExercise === 'flexion_hombro')) {
     if (ang < THR || ang > PHYS.flexion_hombro) return [null, 0];
     return ['flexion_hombro', ang];
   }
@@ -782,7 +782,7 @@ function onResults(res) {
     const vis = k => (p[k].visibility || 0) > VIS;
 
     if (vis('sh') && vis('el') && vis('hip')) {
-      const [ex, ang] = analyzeShoulder(p.sh, p.el, p.hip);
+      const [ex, ang] = analyzeShoulder(p.sh, p.el, p.hip, jData[side].hombro.exercise);
       updateJoint(side, 'hombro', ex || 'reposo', ang);
     }
     if (vis('sh') && vis('el') && vis('wr')) {
