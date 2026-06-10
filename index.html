@@ -454,11 +454,10 @@ const META = {
 const _shoulderBaseline = { derecho: null, izquierdo: null };
 const _shoulderBaseFrames = { derecho: [], izquierdo: [] };
 function analyzeShoulder(sh, el, hip, side) {
-const angRaw = 180 - angle2d(
-    {x: hip.x, y: hip.y},
-    {x: sh.x,  y: sh.y},
-    {x: el.x,  y: el.y}
-  );
+  const vx = el.x - sh.x;
+  const vy = el.y - sh.y;
+  const vz = (el.z || 0) - (sh.z || 0);
+  const angRaw = DEG(Math.atan2(Math.abs(vx) < 0.05 ? 0.001 : vx, vy)) + 90;
   if (_shoulderBaseline[side] === null) {
     _shoulderBaseFrames[side].push(angRaw);
     if (_shoulderBaseFrames[side].length >= 30) {
@@ -467,7 +466,6 @@ const angRaw = 180 - angle2d(
     return [null, 0];
   }
   const ang = Math.max(0, angRaw - _shoulderBaseline[side]);
-  const vx = el.x - sh.x, vy = el.y - sh.y, vz = (el.z || 0) - (sh.z || 0);
   const n  = Math.sqrt(vx*vx + vy*vy + vz*vz) + 1e-6;
   const plane = Math.abs(vy/n) > 0.55 ? 'sagital' : Math.abs(vx/n) > 0.55 ? 'frontal' : 'mixto';
   const behind = (el.z - sh.z) > 0.18;
