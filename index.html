@@ -454,9 +454,8 @@ const META = {
 const _shoulderBaseline = { derecho: null, izquierdo: null };
 const _shoulderBaseFrames = { derecho: [], izquierdo: [] };
 function analyzeShoulder(sh, el, hip, side) {
-const dy = el.y - sh.y;
-const dx = el.x - sh.x;
-const angRaw = DEG(Math.atan2(-dy, Math.abs(dx) < 0.01 ? 0.001 : Math.abs(dx) + Math.abs(dy)));
+const bc = [el.x - sh.x, el.y - sh.y, (el.z || 0) - (sh.z || 0)];
+const angRaw = vecAngle(bc, [0, 1, 0]);
   if (_shoulderBaseline[side] === null) {
     _shoulderBaseFrames[side].push(angRaw);
     if (_shoulderBaseFrames[side].length >= 30) {
