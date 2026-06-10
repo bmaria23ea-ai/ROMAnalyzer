@@ -454,9 +454,11 @@ const META = {
 const _shoulderBaseline = { derecho: null, izquierdo: null };
 const _shoulderBaseFrames = { derecho: [], izquierdo: [] };
 function analyzeShoulder(sh, el, hip, side) {
-  const ba = [hip.x - sh.x, hip.y - sh.y, (hip.z || 0) - (sh.z || 0)];
-  const bc = [el.x  - sh.x, el.y  - sh.y, (el.z  || 0) - (sh.z || 0)];
-  const angRaw = vecAngle(ba, bc);
+const angRaw = 180 - angle2d(
+    {x: hip.x, y: hip.y},
+    {x: sh.x,  y: sh.y},
+    {x: el.x,  y: el.y}
+  );
   if (_shoulderBaseline[side] === null) {
     _shoulderBaseFrames[side].push(angRaw);
     if (_shoulderBaseFrames[side].length >= 30) {
