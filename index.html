@@ -563,6 +563,7 @@ function analyzeKnee(hip, kn, an, side) {
   const ul  = [hip.x - kn.x, hip.y - kn.y];
   const ll  = [an.x  - kn.x, an.y  - kn.y];
   const ang = vecAngle(ul, ll);
+  // convierte ángulo articular a flexión: 0° = rodilla extendida, 140° = máxima flexión
   const flex = 180 - ang;
   if (flex < 0 || flex > PHYS.flexion_rodilla) return [null, 0];
   const last = _kneeLastFlex[side];
@@ -571,9 +572,9 @@ function analyzeKnee(hip, kn, an, side) {
   if (flex > 8 && flex <  last - 5) return ['extension_rodilla', flex];
   return [null, 0];
 }
-const _kneeLastFlex = { derecho: 0, izquierdo: 0 };
-const _hipLastFlex  = { derecho: 0, izquierdo: 0 };
-// Estado previo de por lado para filtro de delta
+// Estado previo por lado: detecta dirección del movimiento (subiendo=flexión, bajando=extensión)
+const _kneeLastFlex = { derecho: 0, izquierdo: 0 };//rodilla
+const _hipLastFlex  = { derecho: 0, izquierdo: 0 };//cadera
 // TOBILLO
 const _ankleLastAng = { derecho: 0, izquierdo: 0 };
 function analyzeAnkle(kn, an, side) {
