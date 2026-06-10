@@ -550,7 +550,7 @@ function analyzeHip(sh, hip, kn, side) {
     if (flex > PHYS.flexion_cadera) return [null, 0];
     const lastH = _hipLastFlex[side];
     _hipLastFlex[side] = flex;
-    if (flex >= lastH - 2) return ['flexion_cadera', flex];
+    if (flex >= lastH - 5) return ['flexion_cadera', flex];
     return ['extension_cadera', flex];
   }
   if (ext > THR) {
@@ -567,8 +567,8 @@ function analyzeKnee(hip, kn, an, side) {
   if (flex < 0 || flex > PHYS.flexion_rodilla) return [null, 0];
   const last = _kneeLastFlex[side];
   _kneeLastFlex[side] = flex;
-  if (flex > 15 && flex >= last - 2) return ['flexion_rodilla', flex];
-  if (flex > 15 && flex <  last - 2) return ['extension_rodilla', flex];
+  if (flex > 15 && flex >= last - 5) return ['flexion_rodilla', flex];
+  if (flex > 15 && flex <  last - 5) return ['extension_rodilla', flex];
   return [null, 0];
 }
 const _kneeLastFlex = { derecho: 0, izquierdo: 0 };
