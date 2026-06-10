@@ -469,7 +469,6 @@ function analyzeShoulder(sh, el, hip, side) {
   const n  = Math.sqrt(vx*vx + vy*vy + vz*vz) + 1e-6;
   const plane = Math.abs(vy/n) > 0.55 ? 'sagital' : Math.abs(vx/n) > 0.55 ? 'frontal' : 'mixto';
   const behind = (el.z - sh.z) > 0.18;
-  console.log(`[${side}] angRaw=${angRaw.toFixed(1)} bl=${_shoulderBaseline[side].toFixed(1)} ang=${ang.toFixed(1)} plane=${plane}`);
   if (behind && plane === 'sagital' && el.y > sh.y - 0.05) {
     const ext = Math.max(0, Math.min(60, ang * 0.6));
     if (ext < 15 || ext > PHYS.extension_hombro) return [null, 0];
@@ -513,7 +512,7 @@ function analyzeElbow(sh, el, wr, side) {
   const delta = flex - _elbowLastFlex[side];
   _elbowLastFlex[side] = flex;
   if (flex < 5) return [null, 0];
-  if (delta < -1) return ['extension_codo', flex];
+  if (delta < -0.3) return ['extension_codo', flex];
   return ['flexion_codo', flex];
 }
 function analyzeHip(sh, hip, kn, side) {
