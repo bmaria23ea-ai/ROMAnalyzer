@@ -461,7 +461,7 @@ function analyzeShoulder(sh, el, hip) {
   const dy = Math.abs(el.y - sh.y);   // desplazamiento vertical del codo
   // EXTENSIÓN 
   //codo baja recto= dx=0.02  dy=0.10 → 0.02 < 0.05 
-  if (el.y > sh.y + 0.02 && dx < dy * 0.5) {
+  if (el.y > sh.y + 0.05 && dx < dy * 0.3 && ang < 20) {
     const ext = 180 - ang;
     if (ext < 15 || ext > PHYS.extension_hombro) return [null, 0];
     return ['extension_hombro', ext];
