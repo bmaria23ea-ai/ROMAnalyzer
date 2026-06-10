@@ -547,7 +547,7 @@ function analyzeHip(sh, hip, kn, side) {
     if (abd > PHYS.abduccion_cadera) return [null, 0];
     return ['abduccion_cadera', abd];
   }
-  if (flex > 18 && flex >= ext) {
+  if (flex > 25 && flex >= ext) {
     if (flex > PHYS.flexion_cadera) return [null, 0];
     return ['flexion_cadera', flex];
   }
@@ -564,8 +564,9 @@ function analyzeKnee(hip, kn, an) {
   const flex = 180 - ang;
   console.log(`[rodilla] ang=${ang.toFixed(1)} flex=${flex.toFixed(1)}`);
   if (flex < 0 || flex > PHYS.flexion_rodilla) return [null, 0];
-  if (flex > THR) return ['flexion_rodilla', flex];
-  return ['extension_rodilla', ang > 160 ? 0 : flex];
+  if (flex > 15) return ['flexion_rodilla', flex];
+  if (flex > 0)  return ['extension_rodilla', flex];
+  return [null, 0];
 }
 // Estado previo de por lado para filtro de delta
 // TOBILLO
