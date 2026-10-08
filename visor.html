@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROMAnalyzer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+/* ── Header ── */
+header {
+  background: #1a2e4a; color: white; padding: 0 32px;
+  display: flex; align-items: center; gap: 0; position: sticky; top: 0; z-index: 50;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+.header-brand { display: flex; align-items: center; gap: 12px; padding: 14px 0; }
+.header-brand h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: 0.02em; }
+.header-brand p { font-size: 0.72rem; opacity: 0.55; margin-top: 1px; }
+.header-tabs { display: flex; margin-left: 32px; height: 100%; }
+.tab-btn {
+  padding: 0 22px; height: 56px; border: none; background: transparent;
+  color: rgba(255,255,255,0.6); font-size: 0.82rem; font-weight: 600;
+  cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;
+  letter-spacing: 0.03em; text-transform: uppercase;
+}
+.tab-btn:hover { color: white; }
+.tab-btn.active { color: white; border-bottom-color: #4f9cf7; }
+.header-right { margin-left: auto; font-size: 0.75rem; color: rgba(255,255,255,0.45); padding: 14px 0; }
+
+/* ── Upload ── */
+.upload-zone {
+  margin: 40px auto; max-width: 560px;
+  border: 2.5px dashed #b0bcc8; border-radius: 16px;
+  background: white; padding: 48px 32px; text-align: center;
+  cursor: pointer; transition: all 0.2s;
+}
+.upload-zone:hover, .upload-zone.drag { border-color: #4f9cf7; background: #f0f6ff; }
+.upload-zone .up-icon { color: #4f9cf7; margin-bottom: 14px; }
+.upload-zone h2 { font-size: 1rem; color: #1a2e4a; margin-bottom: 6px; }
+.upload-zone p { font-size: 0.82rem; color: #7a8fa6; }
+.upload-zone input { display: none; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 20px; border: none; border-radius: 8px;
+  font-size: 0.83rem; font-weight: 600; cursor: pointer; transition: all 0.18s;
+}
+.btn-dark  { background: #1a2e4a; color: white; margin-top: 18px; }
+.btn-dark:hover  { background: #253d5e; }
+.btn-green { background: #1a6630; color: white; }
+.btn-green:hover { background: #134d24; }
+.btn-blue  { background: #2e6da4; color: white; }
+.btn-blue:hover  { background: #1a4f7e; }
+.btn-ghost { background: #f0f2f5; color: #333; border: 1px solid #e0e4ec; }
+.btn-ghost:hover { background: #e0e4ec; }
+.btn-sm { padding: 6px 14px; font-size: 0.78rem; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Pages ── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ══════════════════════════════
+   PAGE 1 — VISOR
+══════════════════════════════ */
+.toolbar {
+  max-width: 1200px; margin: 20px auto 14px; padding: 0 24px;
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+}
+.toolbar input[type=text] {
+  flex: 1; min-width: 220px; padding: 9px 14px;
+  border: 1px solid #d0d5dd; border-radius: 8px; font-size: 0.85rem;
+  background: white;
+}
+.toolbar input[type=text]:focus { outline: none; border-color: #4f9cf7; box-shadow: 0 0 0 3px rgba(79,156,247,0.12); }
+.stat-pill { background: white; border-radius: 8px; padding: 7px 14px; font-size: 0.78rem; color: #555; border: 1px solid #e0e4ec; }
+.stat-pill strong { color: #1a2e4a; }
+
+.cards-grid {
+  max-width: 1200px; margin: 0 auto; padding: 0 24px 48px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px;
+}
+.s-card {
+  background: white; border-radius: 12px; border: 1px solid #e0e4ec;
+  overflow: hidden; transition: box-shadow 0.2s, transform 0.15s; cursor: default;
+}
+.s-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.09); transform: translateY(-1px); }
+.s-card-head {
+  padding: 13px 16px 10px; border-bottom: 1px solid #f0f2f5;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
+}
+.s-card-head h2 { font-size: 0.88rem; font-weight: 700; color: #1a2e4a; }
+.tipo-badge { font-size: 0.7rem; padding: 3px 9px; border-radius: 20px; background: #eef2ff; color: #4f5b93; white-space: nowrap; font-weight: 600; }
+.s-card-body { padding: 11px 16px; }
+.meta-row { display: flex; justify-content: space-between; font-size: 0.75rem; color: #8a96a8; margin-bottom: 5px; }
+.meta-row span { color: #1a2e4a; font-weight: 600; }
+.notas-box { font-size: 0.72rem; color: #555; background: #f8f9fc; border-radius: 6px; padding: 7px 10px; margin-top: 8px; line-height: 1.5; }
+.art-chips { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px; }
+.art-chip { font-size: 0.69rem; background: #f0f2f5; border-radius: 6px; padding: 3px 8px; color: #444; }
+.art-chip em { color: #4f9cf7; font-style: normal; font-weight: 700; }
+.s-card-foot { padding: 9px 16px; border-top: 1px solid #f0f2f5; display: flex; gap: 7px; }
+.s-card-foot .btn { flex: 1; justify-content: center; }
+.empty-state { text-align: center; color: #aaa; padding: 60px 20px; font-size: 0.88rem; grid-column: 1/-1; }
+
+/* ══════════════════════════════
+   PAGE 2 — DETALLE SESIÓN
+══════════════════════════════ */
+#page-detail { max-width: 1000px; margin: 0 auto 48px; padding: 24px 24px 0; }
+.back-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.back-bar h2 { font-size: 1rem; font-weight: 700; color: #1a2e4a; }
+.back-bar .spacer { flex: 1; }
+
+.info-card {
+  background: white; border-radius: 12px; padding: 20px 24px;
+  margin-bottom: 18px; box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 14px;
+}
+.info-item label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.07em; color: #8a96a8; display: block; margin-bottom: 3px; }
+.info-item span { font-size: 0.9rem; font-weight: 600; color: #1a2e4a; }
+.info-item.full { grid-column: 1/-1; }
+.info-item.full span { font-weight: 400; font-size: 0.85rem; }
+
+.mm-section-title {
+  font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.07em; color: #8a96a8; margin-bottom: 10px;
+}
+.mm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 9px; margin-bottom: 22px; }
+.mm-card { background: white; border-radius: 10px; padding: 12px 15px; box-shadow: 0 1px 5px rgba(0,0,0,0.07); }
+.mm-card h4 { font-size: 0.72rem; color: #8a96a8; text-transform: capitalize; margin-bottom: 7px; font-weight: 600; }
+.mm-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+.mm-lbl { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; color: #b0bcc8; }
+.mm-val { font-size: 0.88rem; font-weight: 700; }
+.mm-val.hi { color: #2e6da4; }
+.mm-val.lo { color: #e05a2b; }
+
+.sec-label {
+  font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: white; padding: 9px 16px; border-radius: 8px 8px 0 0;
+}
+.sup-bg { background: #2e6da4; }
+.inf-bg { background: #1a8048; }
+.ot-bg  { background: #6b46c1; }
+.table-wrap {
+  background: white; border-radius: 0 0 12px 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.07); overflow: hidden; margin-bottom: 22px;
+}
+table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+thead tr { background: #f0f4f8; }
+thead th { padding: 9px 13px; text-align: left; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: #5a6e84; font-weight: 700; border-bottom: 2px solid #dde4ed; }
+tbody tr { border-bottom: 1px solid #eef1f5; transition: background 0.12s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: #f7faff; }
+tbody td { padding: 8px 13px; color: #2a3a50; }
+.badge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+.badge-d { background: #dbeafe; color: #1e40af; }
+.badge-i { background: #fce7f3; color: #9d174d; }
+.ang { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ── Modal JSON ── */
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+.modal-bg.open { display: flex; }
+.modal { background: white; border-radius: 14px; max-width: 680px; width: 100%; max-height: 82vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+.modal-head { padding: 15px 20px; border-bottom: 1px solid #e0e4ec; display: flex; justify-content: space-between; align-items: center; }
+.modal-head h3 { font-size: 0.92rem; font-weight: 700; }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: #888; line-height: 1; }
+.modal-body { overflow-y: auto; padding: 18px; }
+pre { background: #f4f6fa; border-radius: 8px; padding: 14px; font-size: 0.72rem; overflow-x: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.6; }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  header { padding: 0 16px; }
+  .header-tabs { margin-left: 12px; }
+  .tab-btn { padding: 0 12px; font-size: 0.72rem; }
+  .toolbar, .cards-grid { padding: 0 12px; }
+  #page-detail { padding: 16px 12px 0; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+    <div><h1>ROMAnalyzer</h1></div>
+  </div>
+  <div class="header-tabs">
+    <button class="tab-btn active" onclick="goTab('visor')">📋 Sesiones</button>
+    <button class="tab-btn" id="tab-detail" onclick="goTab('detail')" style="display:none">📄 Detalle</button>
+  </div>
+  <div class="header-right" id="header-info"></div>
+</header>
+
+<!-- ══ PAGE: LOADING ══ -->
+<div id="page-upload" class="page active">
+  <div class="upload-zone" id="loading-zone" style="cursor:default;">
+    <svg class="up-icon" id="loading-icon" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="animation: spin 1.2s linear infinite;">
+      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+    </svg>
+    <h2 id="loading-title">Conectando al servidor…</h2>
+    <p id="loading-sub">Cargando sesiones desde la base de datos</p>
+  </div>
+</div>
+<style>
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+
+<!-- ══ PAGE: VISOR ══ -->
+<div id="page-visor" class="page">
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="Buscar por paciente, notas, tipo, ID…">
+    <div class="stat-pill">Total: <strong id="stat-total">0</strong></div>
+    <div class="stat-pill">Mostrando: <strong id="stat-showing">0</strong></div>
+    <button class="btn btn-ghost btn-sm" onclick="descargarZip()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Descargar ZIP
+    </button>
+  </div>
+  <div class="cards-grid" id="cards-grid"></div>
+</div>
+
+<!-- ══ PAGE: DETALLE ══ -->
+<div id="page-detail" class="page">
+  <div class="back-bar">
+    <button class="btn btn-ghost btn-sm" onclick="goTab('visor')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      Volver
+    </button>
+    <h2 id="detail-title">—</h2>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost btn-sm" onclick="descargarJSON()">⬇ JSON</button>
+    <button class="btn btn-green btn-sm" onclick="descargarExcel()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      Excel
+    </button>
+  </div>
+  <div id="detail-body"></div>
+</div>
+
+<!-- ══ Modal JSON ══ -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-title">JSON</h3>
+      <button class="modal-close" onclick="cerrarModal()">×</button>
+    </div>
+    <div class="modal-body"><pre id="modal-pre"></pre></div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// Config API (mismo backend que usa ROMAnalyzer)
+// ─────────────────────────────────────────────
+const API_URL = 'https://backend-d2fb.onrender.com/api/sesiones.php';
+const API_KEY = '-xK9mP3qL7nR2wT8v';
+
+// ─────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────
+let allSessions = [];
+let filteredSessions = [];
+let currentSession = null;
+
+// ─────────────────────────────────────────────
+// Tabs / navigation
+// ─────────────────────────────────────────────
+function goTab(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  if (name === 'visor') {
+    document.getElementById('page-visor').classList.add('active');
+    document.querySelectorAll('.tab-btn')[0].classList.add('active');
+  } else if (name === 'detail') {
+    document.getElementById('page-detail').classList.add('active');
+    document.getElementById('tab-detail').classList.add('active');
+  }
+}
+
+// ─────────────────────────────────────────────
+// Cargar sesiones desde el backend
+// ─────────────────────────────────────────────
+async function loadFromApi() {
+  setLoading('Conectando al servidor…', 'Si el servidor estaba dormido puede tardar hasta un minuto');
+  try {
+    const res = await fetch(API_URL, { headers: { 'X-API-Key': API_KEY } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const sesiones = await res.json();
+    if (!Array.isArray(sesiones) || !sesiones.length) {
+      showError('La base de datos no contiene sesiones todavía.');
+      return;
+    }
+    sesiones.sort((a,b) => new Date(b.inicio||0) - new Date(a.inicio||0));
+    loadSessions(sesiones);
+  } catch (err) {
+    console.error(err);
+    showError(`Error al conectar: ${err.message}`);
+  }
+}
+
+function setLoading(msg, sub = 'Cargando sesiones desde la base de datos') {
+  document.getElementById('loading-title').textContent = msg;
+  document.getElementById('loading-sub').textContent = sub;
+}
+
+function showError(msg) {
+  const zone = document.getElementById('loading-zone');
+  zone.innerHTML = `
+    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#e05a2b" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <h2 style="color:#e05a2b;margin-top:12px">Error de conexión</h2>
+    <p style="margin-top:6px">${msg}</p>
+    <button class="btn btn-dark" style="margin-top:18px" onclick="loadFromApi()">Reintentar</button>
+  `;
+}
+
+function loadSessions(sesiones) {
+  allSessions = sesiones;
+  filteredSessions = sesiones;
+  document.getElementById('page-upload').classList.remove('active');
+  document.getElementById('page-visor').classList.add('active');
+  document.querySelectorAll('.tab-btn')[0].classList.add('active');
+  document.getElementById('stat-total').textContent = sesiones.length;
+  document.getElementById('header-info').textContent = sesiones.length + ' sesiones cargadas';
+  renderGrid(sesiones);
+}
+
+// Iniciar conexión automáticamente
+window.addEventListener('DOMContentLoaded', loadFromApi);
+
+// ─────────────────────────────────────────────
+// Grid
+// ─────────────────────────────────────────────
+function fmtFecha(str) {
+  if (!str) return '—';
+  const d = new Date(str.replace(' ','T'));
+  if (isNaN(d)) return str;
+  return d.toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'}) + ' · ' +
+         d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+}
+function duracion(ini, fin) {
+  if (!ini || !fin) return null;
+  const ms = new Date(fin.replace(' ','T')) - new Date(ini.replace(' ','T'));
+  if (isNaN(ms) || ms < 0) return null;
+  return Math.floor(ms/60000) + ' min ' + Math.floor((ms%60000)/1000) + 's';
+}
+function artsActivas(mm) {
+  if (!mm) return [];
+  return Object.entries(mm).filter(([,v]) => v && v.max > 0).map(([k,v]) => ({nombre: k.replace(/_/g,' '), max: v.max}));
+}
+
+function renderGrid(sesiones) {
+  const grid = document.getElementById('cards-grid');
+  document.getElementById('stat-showing').textContent = sesiones.length;
+  if (!sesiones.length) { grid.innerHTML = '<div class="empty-state">No hay sesiones que coincidan con la búsqueda.</div>'; return; }
+  grid.innerHTML = sesiones.map((s, i) => {
+    const dur = duracion(s.inicio, s.fin);
+    const arts = artsActivas(s.max_min);
+    const chips = arts.slice(0,6).map(a => `<span class="art-chip">${a.nombre} <em>${Math.round(a.max)}°</em></span>`).join('');
+    const idx = allSessions.indexOf(s);
+    return `<div class="s-card">
+      <div class="s-card-head">
+        <h2>${s.paciente||'Sin nombre'}</h2>
+        <span class="tipo-badge">${(s.tipo||'').replace(/_/g,' ')}</span>
+      </div>
+      <div class="s-card-body">
+        <div class="meta-row">Fecha <span>${fmtFecha(s.inicio)}</span></div>
+        ${dur?`<div class="meta-row">Duración <span>${dur}</span></div>`:''}
+        <div class="meta-row">Sesión <span>#${s.id}</span></div>
+        ${s.notas?`<div class="notas-box">${s.notas}</div>`:''}
+        ${chips?`<div class="art-chips">${chips}</div>`:''}
+      </div>
+      <div class="s-card-foot">
+        <button class="btn btn-ghost btn-sm" onclick="verJSON(${idx})">{ } JSON</button>
+        <button class="btn btn-blue btn-sm" onclick="abrirDetalle(${idx})">Ver registro →</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('search').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  filteredSessions = allSessions.filter(s =>
+    (s.paciente||'').toLowerCase().includes(q) ||
+    (s.notas||'').toLowerCase().includes(q) ||
+    (s.tipo||'').toLowerCase().includes(q) ||
+    (s.id||'').toString().includes(q)
+  );
+  renderGrid(filteredSessions);
+});
+
+// ─────────────────────────────────────────────
+// Detalle sesión
+// ─────────────────────────────────────────────
+function cap(s) { return s ? s.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase()) : '—'; }
+function fmtDate(str) {
+  if (!str) return '—';
+  const d = new Date(str);
+  return isNaN(d) ? str : d.toLocaleString('es-EC', {dateStyle:'medium', timeStyle:'short'});
+}
+
+function abrirDetalle(idx) {
+  currentSession = allSessions[idx];
+  const s = currentSession;
+  document.getElementById('detail-title').textContent = `Sesión #${s.id} — ${s.paciente||'—'}`;
+  document.getElementById('tab-detail').style.display = 'inline-flex';
+  const body = document.getElementById('detail-body');
+  body.innerHTML = '';
+
+  // Info card
+  body.insertAdjacentHTML('beforeend', `
+    <div class="info-card">
+      <div class="info-item"><label>Paciente</label><span>${s.paciente||'—'}</span></div>
+      <div class="info-item"><label>Sesión #</label><span>${s.id||'—'}</span></div>
+      <div class="info-item"><label>Inicio</label><span>${fmtDate(s.inicio)}</span></div>
+      <div class="info-item"><label>Fin</label><span>${fmtDate(s.fin)}</span></div>
+      <div class="info-item"><label>Tipo</label><span>${cap(s.tipo)||'—'}</span></div>
+      <div class="info-item full"><label>Notas</label><span>${s.notas||'—'}</span></div>
+    </div>`);
+
+  // Max/min
+  const mm = s.max_min || {};
+  const mmKeys = Object.keys(mm).filter(k => mm[k] && mm[k].max && mm[k].max > 0);
+  if (mmKeys.length) {
+    const cards = mmKeys.map(k => `
+      <div class="mm-card">
+        <h4>${cap(k)}</h4>
+        <div class="mm-row"><span class="mm-lbl">Máx</span><span class="mm-val hi">${mm[k].max?.toFixed(1)}°</span></div>
+        <div class="mm-row"><span class="mm-lbl">Mín</span><span class="mm-val lo">${mm[k].min?.toFixed(1) ?? '—'}°</span></div>
+      </div>`).join('');
+    body.insertAdjacentHTML('beforeend', `
+      <div class="mm-section-title">Rangos máx / mín por articulación</div>
+      <div class="mm-grid">${cards}</div>`);
+  }
+
+  // Tablas de registro
+  const regs = s.registro || [];
+  if (!regs.length) { body.insertAdjacentHTML('beforeend','<p style="color:#aaa;font-size:.85rem;padding:20px 0">Sin registros de movimiento.</p>'); }
+  else {
+    const sup   = regs.filter(r => (r.region||'').toLowerCase() === 'superior');
+    const inf   = regs.filter(r => (r.region||'').toLowerCase() === 'inferior');
+    const otros = regs.filter(r => !['superior','inferior'].includes((r.region||'').toLowerCase()));
+    buildTable(body, sup,   'Tren Superior', 'sup-bg');
+    buildTable(body, inf,   'Tren Inferior', 'inf-bg');
+    buildTable(body, otros, 'Otros registros', 'ot-bg');
+  }
+
+  goTab('detail');
+}
+
+function buildTable(container, rows, label, cls) {
+  if (!rows.length) return;
+  const filas = rows.map(r => `
+    <tr>
+      <td>${r.timestamp||'—'}</td>
+      <td><span class="badge ${r.lado?.toLowerCase()==='derecho'?'badge-d':'badge-i'}">${cap(r.lado)}</span></td>
+      <td>${cap(r.articulacion)}</td>
+      <td>${cap(r.ejercicio)}</td>
+      <td class="ang">${r.angulo!=null?parseFloat(r.angulo).toFixed(2)+'°':'—'}</td>
+    </tr>`).join('');
+  container.insertAdjacentHTML('beforeend', `
+    <div class="sec-label ${cls}">${label} — ${rows.length} registros</div>
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>Tiempo</th><th>Lado</th><th>Articulación</th><th>Ejercicio</th><th>Ángulo</th>
+      </tr></thead>
+      <tbody>${filas}</tbody>
+    </table></div>`);
+}
+
+// ─────────────────────────────────────────────
+// Descargas
+// ─────────────────────────────────────────────
+async function descargarZip() {
+  if (!allSessions.length) return;
+  const zip = new JSZip();
+  allSessions.forEach(s => zip.file(`sesion_${s.id}.json`, JSON.stringify(s, null, 2)));
+  const blob = await zip.generateAsync({type:'blob'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'sesiones_romanalyzer.zip'; a.click();
+}
+
+function descargarJSON() {
+  if (!currentSession) return;
+  const blob = new Blob([JSON.stringify(currentSession, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `sesion_${currentSession.id}.json`; a.click();
+}
+
+function verJSON(idx) {
+  const s = allSessions[idx];
+  document.getElementById('modal-title').textContent = `Sesión #${s.id} — ${s.paciente||'—'}`;
+  document.getElementById('modal-pre').textContent = JSON.stringify(s, null, 2);
+  document.getElementById('modal').classList.add('open');
+}
+function cerrarModal() { document.getElementById('modal').classList.remove('open'); }
+document.getElementById('modal').addEventListener('click', e => { if(e.target===document.getElementById('modal')) cerrarModal(); });
+
+function buildExcelSheet(wb, rows, sheetName) {
+  if (!rows.length) return;
+  const headers = ['Tiempo','Lado','Región','Articulación','Ejercicio','Ángulo'];
+  const aoa = [headers, ...rows.map(r => [
+    r.timestamp||'—', cap(r.lado), cap(r.region), cap(r.articulacion), cap(r.ejercicio),
+    r.angulo!=null ? parseFloat(r.angulo).toFixed(2)+'°' : '—'
+  ])];
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:10},{wch:12},{wch:10},{wch:14},{wch:22},{wch:10}];
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let R = range.s.r; R <= range.e.r; R++) {
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const addr = XLSX.utils.encode_cell({r:R,c:C});
+      if (!ws[addr]) ws[addr] = {t:'z',v:''};
+      ws[addr].s = {
+        font: {name:'Times New Roman', sz:8, bold: R===0},
+        alignment: {wrapText:true, vertical:'top'},
+        border: {
+          top:{style:'thin',color:{rgb:'000000'}}, bottom:{style:'thin',color:{rgb:'000000'}},
+          left:{style:'thin',color:{rgb:'000000'}}, right:{style:'thin',color:{rgb:'000000'}}
+        }
+      };
+    }
+  }
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+}
+
+function descargarExcel() {
+  if (!currentSession) return;
+  const regs = currentSession.registro || [];
+  const sup   = regs.filter(r => (r.region||'').toLowerCase() === 'superior');
+  const inf   = regs.filter(r => (r.region||'').toLowerCase() === 'inferior');
+  const otros = regs.filter(r => !['superior','inferior'].includes((r.region||'').toLowerCase()));
+  const wb = XLSX.utils.book_new();
+  buildExcelSheet(wb, sup,   'Tren Superior');
+  buildExcelSheet(wb, inf,   'Tren Inferior');
+  buildExcelSheet(wb, otros, 'Otros');
+  XLSX.writeFile(wb, `sesion_${currentSession.id}_registro.xlsx`, {cellStyles:true, bookType:'xlsx'});
+}
+</script>
+</body>
+</html>
